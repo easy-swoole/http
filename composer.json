@@ -25,5 +25,6 @@
     },
     "require-dev": {
         "easyswoole/swoole-ide-helper": "dev-master"
-    }
+    },
+    "minimum-stability": "dev"
 }
