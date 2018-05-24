@@ -9,6 +9,8 @@
 namespace EasySwoole\Http\Message;
 
 
+use EasySwoole\Curl\Cookie;
+
 class Response extends Message
 {
     private $statusCode = 200;

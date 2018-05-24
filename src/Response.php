@@ -8,10 +8,9 @@
 
 namespace EasySwoole\Http;
 
+use EasySwoole\Curl\Cookie;
 use EasySwoole\Http\Message\Response as MessageResponse;
 use EasySwoole\Http\Message\Status;
-use EasySwoole\Cookie;
-
 
 class Response extends MessageResponse
 {
@@ -81,26 +80,19 @@ class Response extends MessageResponse
             $this->getBody()->write($str);
             return true;
         }else{
-            $bt = debug_backtrace();
-            $caller = array_shift($bt);
-            $file = $caller['file'];
-            $line = $caller['line'];
-            Trigger::error("response has end at status {$this->isEndResponse}",$file,$line);
             return false;
         }
     }
 
-    function redirect($url,$status = Status::CODE_MOVED_TEMPORARILY){
+    function redirect($url,$status = Status::CODE_MOVED_TEMPORARILY)
+    {
         if(!$this->isEndResponse()){
             //仅支持header重定向  不做meta定向
             $this->withStatus($status);
             $this->withHeader('Location',$url);
+            return true;
         }else{
-            $bt = debug_backtrace();
-            $caller = array_shift($bt);
-            $file = $caller['file'];
-            $line = $caller['line'];
-            Trigger::error("response has end at status {$this->isEndResponse}",$file,$line);
+            return false;
         }
     }
 
@@ -120,11 +112,6 @@ class Response extends MessageResponse
             $this->withAddedCookie($cookie);
             return true;
         }else{
-            $bt = debug_backtrace();
-            $caller = array_shift($bt);
-            $file = $caller['file'];
-            $line = $caller['line'];
-            Trigger::error("response has end at status {$this->isEndResponse}",$file,$line);
             return false;
         }
 
