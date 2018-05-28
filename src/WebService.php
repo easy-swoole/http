@@ -16,9 +16,9 @@ class WebService
 {
     private $dispatcher;
     private $exceptionHandler = null;
-    final function __construct($controllerNameSpace = 'App\\HttpController\\')
+    final function __construct($controllerNameSpace = 'App\\HttpController\\',$depth = 5)
     {
-        $this->dispatcher = new Dispatcher($controllerNameSpace);
+        $this->dispatcher = new Dispatcher($controllerNameSpace,$depth);
     }
 
     function setExceptionHandler(callable $handler)
