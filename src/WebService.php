@@ -21,7 +21,7 @@ class WebService
         $this->dispatcher = new Dispatcher($controllerNameSpace,$depth);
     }
 
-    function setExceptionHandler(callable $handler)
+    function setExceptionHandler(callable $handler = null)
     {
         $this->exceptionHandler = $handler;
     }
