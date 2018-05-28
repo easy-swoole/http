@@ -26,10 +26,8 @@ class WebService
         $this->exceptionHandler = $handler;
     }
 
-    function onRequest(\swoole_http_request $request,\swoole_http_response $response):void
+    function onRequest(Request $request_psr,Response $response_psr):void
     {
-        $request_psr = new Request($request);
-        $response_psr = new Response($response);
         try{
             $this->dispatcher->dispatch($request_psr,$response_psr);
         }catch (\Throwable $throwable){
