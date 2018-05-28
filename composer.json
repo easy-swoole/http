@@ -13,10 +13,10 @@
     ],
     "require": {
         "php": ">=7.1.0",
-        "easyswoole/spl": "^1.0",
-        "easyswoole/curl": "^1.0",
-        "easyswoole/component": "^1.0",
-        "easyswoole/trigger": "^1.0"
+        "easyswoole/spl": "dev-master",
+        "easyswoole/curl": "dev-master",
+        "easyswoole/component": "dev-master",
+        "easyswoole/trigger": "dev-master"
     },
     "autoload": {
         "psr-4": {
@@ -25,5 +25,6 @@
     },
     "require-dev": {
         "easyswoole/swoole-ide-helper": "dev-master"
-    }
+    },
+    "minimum-stability":"dev"
 }
