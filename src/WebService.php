@@ -32,7 +32,7 @@ class WebService
             $this->dispatcher->dispatch($request_psr,$response_psr);
         }catch (\Throwable $throwable){
             if($this->exceptionHandler){
-                Invoker::callUserFunc($this->exceptionHandler,$throwable,$request_psr,$response_psr);
+                call_user_func($this->exceptionHandler,$throwable,$request_psr,$response_psr);
             }else{
                 $response_psr->withStatus(Status::CODE_INTERNAL_SERVER_ERROR);
                 $response_psr->write(nl2br($throwable->getMessage() ."\n". $throwable->getTraceAsString()));

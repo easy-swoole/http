@@ -9,18 +9,29 @@
 namespace EasySwoole\Http;
 
 
+use EasySwoole\Http\AbstractInterface\Controller;
 use EasySwoole\Http\Message\Status;
+use EasySwoole\Trigger\Trigger;
+use Swoole\Coroutine as co;
 
 class Dispatcher
 {
-
     private $controllerNameSpacePrefix;
-    private $maxDepth = 5;
+    private $maxDepth;
+    private $maxPoolNum;
+    /*
+     * 这部分的进程对象池，单独实现
+     */
+    private $controllerPool = [];
+    private $controllerPoolInfo = [];
+    private $waitList = null;
 
-    function __construct($controllerNameSpace,$maxDepth = 5)
+    function __construct($controllerNameSpace,$maxDepth = 5,$maxPoolNum = 20)
     {
         $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
         $this->maxDepth = $maxDepth;
+        $this->maxPoolNum = $maxPoolNum;
+        $this->waitList = new \SplQueue();
     }
 
     public function dispatch(Request $request,Response $response):void
@@ -60,7 +71,18 @@ class Dispatcher
             $maxDepth--;
         }
         if(!empty($finalClass)){
-            (new $finalClass($actionName,$request,$response));
+            $c = $this->getController($finalClass);
+            if($c instanceof Controller){
+                try{
+                    $c->__hook($actionName,$request,$response);
+                }catch (\Throwable $throwable){
+                    Trigger::throwable($throwable);
+                }finally {
+                    $this->recycleController($finalClass,$c);
+                }
+            }else{
+                throw new \Exception('controller pool empty for '.$finalClass);
+            }
         }else{
             if(in_array($request->getUri()->getPath(),['/','/index.html'])){
                 $content = file_get_contents(__DIR__.'/Static/welcome.html');
@@ -69,6 +91,46 @@ class Dispatcher
                 $content = file_get_contents(__DIR__.'/Static/404.html');
             }
             $response->write($content);
+        }
+    }
+
+    protected function getController(string $class)
+    {
+        if(!isset($this->controllerPool[$class])){
+            $this->controllerPool[$class] = new \SplQueue();
+        }
+        $pool = $this->controllerPool[$class];
+        //懒惰创建模式
+        if($pool->isEmpty()){
+            if(!isset($this->controllerPoolInfo[$class])){
+                $this->controllerPoolInfo[$class] = 0;
+            }
+            $createNum = $this->controllerPoolInfo[$class];
+            if($createNum < $this->maxPoolNum){
+                $this->controllerPoolInfo[$class] = $createNum+1;
+                try{
+                    //防止用户在控制器结构函数做了什么东西导致异常
+                    return new $class();
+                }catch (\Throwable $exception){
+                    $this->controllerPoolInfo[$class] = $createNum;
+                    Trigger::throwable($exception);
+                    return null;
+                }
+            }
+            $cid = co::getUid();
+            $this->waitList->enqueue($cid);
+            co::suspend();
+            return $pool->dequeue();
+        }
+        return $pool->dequeue();
+    }
+
+    protected function recycleController(string $class,Controller $obj)
+    {
+        $obj->objectRestore();
+        ($this->controllerPool[$class])->enqueue($obj);
+        if(!$this->waitList->isEmpty()){
+            co::resume($this->waitList->dequeue());
         }
     }
 }

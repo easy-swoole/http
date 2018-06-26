@@ -9,28 +9,34 @@
 namespace EasySwoole\Http\AbstractInterface;
 
 
+use EasySwoole\Component\Pool\AbstractObject;
 use EasySwoole\Http\Message\Status;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 
-abstract class Controller
+abstract class Controller extends AbstractObject
 {
     private $request;
     private $response;
     private $actionName;
+
+    protected $forbidActions = ['__construct','__hook','objectRestore'];
+
     abstract function index();
 
-    public function __construct(string $actionName,Request $request,Response $response)
+    protected function gc()
     {
-        $this->request = $request;
-        $this->response = $response;
-        $this->actionName = $actionName;
-        if($actionName == '__construct'){
-            $this->response()->withStatus(Status::CODE_BAD_REQUEST);
-        }else{
-            $this->__hook( $actionName);
-        }
+        // TODO: Implement gc() method.
     }
+
+    function objectRestore()
+    {
+        // TODO: Implement objectRestore() method.
+        $this->actionName = null;
+        $this->request = null;
+        $this->response = null;
+    }
+
 
     protected function actionNotFound($action):void
     {
@@ -42,7 +48,7 @@ abstract class Controller
 
     }
 
-    protected function onException(\Throwable $throwable,$actionName):void
+    protected function onException(\Throwable $throwable):void
     {
         throw $throwable ;
     }
@@ -57,13 +63,15 @@ abstract class Controller
         return $this->actionName;
     }
 
-    protected function resetAction(string $action):void
+    public function __hook(?string $actionName,Request $request,Response $response):void
     {
-        $this->actionName = $action;
-    }
-
-    protected function __hook(?string $actionName):void
-    {
+        if(in_array($actionName,$this->forbidActions)){
+            $this->response()->withStatus(Status::CODE_BAD_REQUEST);
+            return ;
+        }
+        $this->request = $request;
+        $this->response = $response;
+        $this->actionName = $actionName;
         if($this->onRequest($actionName) !== false){
             //支持在子类控制器中以private，protected来修饰某个方法不可见
             try{
@@ -74,13 +82,13 @@ abstract class Controller
                     $this->actionNotFound($actionName);
                 }
             }catch (\Throwable $throwable){
-                $this->onException($throwable,$actionName);
+                $this->onException($throwable);
             }
             //afterAction 始终都会被执行
             try{
                 $this->afterAction($actionName);
             }catch (\Throwable $throwable){
-                $this->onException($throwable,$actionName);
+                $this->onException($throwable);
             }
         }
     }

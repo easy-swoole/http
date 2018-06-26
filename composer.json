@@ -13,6 +13,7 @@
     ],
     "require": {
         "php": ">=7.1.0",
+        "ext-swoole":"^4.0",
         "easyswoole/spl": "dev-master",
         "easyswoole/curl": "dev-master",
         "easyswoole/component": "dev-master",
