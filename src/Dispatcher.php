@@ -10,6 +10,8 @@ namespace EasySwoole\Http;
 
 
 use EasySwoole\Http\AbstractInterface\Controller;
+use EasySwoole\Http\Exceptions\ControllerError;
+use EasySwoole\Http\Exceptions\ControllerPoolEmpty;
 use EasySwoole\Http\Message\Status;
 use EasySwoole\Trigger\Trigger;
 use Swoole\Coroutine as co;
@@ -19,6 +21,7 @@ class Dispatcher
     private $controllerNameSpacePrefix;
     private $maxDepth;
     private $maxPoolNum;
+    private $exceptionHandler = null;
     /*
      * 这部分的进程对象池，单独实现
      */
@@ -32,6 +35,11 @@ class Dispatcher
         $this->maxDepth = $maxDepth;
         $this->maxPoolNum = $maxPoolNum;
         $this->waitList = new \SplQueue();
+    }
+
+    function setExceptionHandler(callable $handler):void
+    {
+        $this->exceptionHandler = $handler;
     }
 
     public function dispatch(Request $request,Response $response):void
@@ -76,12 +84,17 @@ class Dispatcher
                 try{
                     $c->__hook($actionName,$request,$response);
                 }catch (\Throwable $throwable){
-                    Trigger::throwable($throwable);
+                    if(is_callable($this->exceptionHandler)){
+                        call_user_func($this->exceptionHandler,$throwable,$request,$response);
+                    }else{
+                        Trigger::throwable($throwable);
+                    }
                 }finally {
                     $this->recycleController($finalClass,$c);
                 }
             }else{
-                throw new \Exception('controller pool empty for '.$finalClass);
+                //直接抛给上层调用
+                throw new ControllerPoolEmpty('controller pool empty for '.$finalClass);
             }
         }else{
             if(in_array($request->getUri()->getPath(),['/','/index.html'])){
@@ -113,8 +126,7 @@ class Dispatcher
                     return new $class();
                 }catch (\Throwable $exception){
                     $this->controllerPoolInfo[$class] = $createNum;
-                    Trigger::throwable($exception);
-                    return null;
+                    throw new ControllerError();
                 }
             }
             $cid = co::getUid();

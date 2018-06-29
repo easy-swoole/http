@@ -20,7 +20,19 @@ abstract class Controller extends AbstractObject
     private $response;
     private $actionName;
 
-    protected $forbidActions = ['__construct','__hook','objectRestore'];
+    protected $allowMethods = [];
+
+    function __construct()
+    {
+        //支持在子类控制器中以private，protected来修饰某个方法不可见
+        $list = [];
+        $ref = new \ReflectionClass(static::class);
+        $public = $ref->getMethods(\ReflectionMethod::IS_PUBLIC);
+        foreach ($public as $item){
+            array_push($list,$item->getName());
+        }
+        $this->allowMethods = array_diff($list,['__construct','__hook','objectRestore','__destruct']);
+    }
 
     abstract function index();
 
@@ -65,31 +77,22 @@ abstract class Controller extends AbstractObject
 
     public function __hook(?string $actionName,Request $request,Response $response):void
     {
-        if(in_array($actionName,$this->forbidActions)){
-            $this->response()->withStatus(Status::CODE_BAD_REQUEST);
-            return ;
-        }
         $this->request = $request;
         $this->response = $response;
         $this->actionName = $actionName;
-        if($this->onRequest($actionName) !== false){
-            //支持在子类控制器中以private，protected来修饰某个方法不可见
-            try{
-                $ref = new \ReflectionClass(static::class);
-                if($ref->hasMethod($actionName) && $ref->getMethod( $actionName)->isPublic()){
+        try{
+            if($this->onRequest($actionName) !== false){
+                if(in_array($actionName,$this->allowMethods)){
                     $this->$actionName();
                 }else{
                     $this->actionNotFound($actionName);
                 }
-            }catch (\Throwable $throwable){
-                $this->onException($throwable);
             }
-            //afterAction 始终都会被执行
-            try{
-                $this->afterAction($actionName);
-            }catch (\Throwable $throwable){
-                $this->onException($throwable);
-            }
+        }catch (\Throwable $throwable){
+            //若没有重构onException，直接抛出给上层
+            $this->onException($throwable);
+        }finally{
+            $this->afterAction($actionName);
         }
     }
 
