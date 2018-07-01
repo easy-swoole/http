@@ -79,22 +79,23 @@ class Dispatcher
             $maxDepth--;
         }
         if(!empty($finalClass)){
-            $c = $this->getController($finalClass);
+            try{
+                $c = $this->getController($finalClass);
+            }catch (\Throwable $throwable){
+                $this->hookThrowable($throwable,$request,$response);
+                return;
+            }
             if($c instanceof Controller){
                 try{
                     $c->__hook($actionName,$request,$response);
                 }catch (\Throwable $throwable){
-                    if(is_callable($this->exceptionHandler)){
-                        call_user_func($this->exceptionHandler,$throwable,$request,$response);
-                    }else{
-                        Trigger::throwable($throwable);
-                    }
+                    $this->hookThrowable($throwable,$request,$response);
                 }finally {
                     $this->recycleController($finalClass,$c);
                 }
             }else{
-                //直接抛给上层调用
-                throw new ControllerPoolEmpty('controller pool empty for '.$finalClass);
+                $throwable = new ControllerPoolEmpty('controller pool empty for '.$finalClass);
+                $this->hookThrowable($throwable,$request,$response);
             }
         }else{
             if(in_array($request->getUri()->getPath(),['/','/index.html'])){
@@ -126,7 +127,8 @@ class Dispatcher
                     return new $class();
                 }catch (\Throwable $exception){
                     $this->controllerPoolInfo[$class] = $createNum;
-                    throw new ControllerError();
+                    //直接抛给上层
+                    throw new ControllerError($exception->getMessage());
                 }
             }
             $cid = co::getUid();
@@ -143,6 +145,17 @@ class Dispatcher
         ($this->controllerPool[$class])->enqueue($obj);
         if(!$this->waitList->isEmpty()){
             co::resume($this->waitList->dequeue());
+        }
+    }
+
+    protected function hookThrowable(\Throwable $throwable,Request $request,Response $response)
+    {
+        if(is_callable($this->exceptionHandler)){
+            call_user_func($this->exceptionHandler,$throwable,$request,$response);
+        }else{
+            $response->withStatus(Status::CODE_INTERNAL_SERVER_ERROR);
+            $response->write(nl2br($throwable->getMessage()."\n".$throwable->getTraceAsString()));
+            Trigger::throwable($throwable);
         }
     }
 }
