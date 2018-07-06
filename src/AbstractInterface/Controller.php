@@ -20,7 +20,7 @@ abstract class Controller extends AbstractObject
     private $response;
     private $actionName;
 
-    protected $allowMethods = [];
+    private $allowMethods = [];
 
     function __construct()
     {
