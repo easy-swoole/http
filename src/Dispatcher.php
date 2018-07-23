@@ -14,7 +14,7 @@ use EasySwoole\Http\Exceptions\ControllerError;
 use EasySwoole\Http\Exceptions\ControllerPoolEmpty;
 use EasySwoole\Http\Message\Status;
 use EasySwoole\Trigger\Trigger;
-use Swoole\Coroutine as co;
+use Swoole\Coroutine as Co;
 
 class Dispatcher
 {
@@ -137,9 +137,9 @@ class Dispatcher
                     throw new ControllerError($exception->getMessage());
                 }
             }
-            $cid = co::getUid();
+            $cid = Co::getUid();
             array_push($this->waitList[$classKey],$cid);
-            co::suspend($cid);//挂起携程。等待恢复
+            Co::suspend($cid);//挂起携程。等待恢复
             /*
              * 携程恢复后，需要再次判断。因为recycleController用户可能抛出异常
              */
@@ -164,7 +164,7 @@ class Dispatcher
         }finally{
             //无论如何，恢复一个就近的协程等待，防止全部用户卡死。
             if(!empty($this->waitList[$classKey])){
-                co::resume(array_shift($this->waitList[$classKey]));
+                Co::resume(array_shift($this->waitList[$classKey]));
             }
         }
     }
