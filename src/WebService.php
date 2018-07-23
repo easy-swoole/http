@@ -15,9 +15,9 @@ use EasySwoole\Http\Message\Status;
 class WebService
 {
     private $dispatcher;
-    final function __construct($controllerNameSpace = 'App\\HttpController\\',$depth = 5)
+    final function __construct($controllerNameSpace = 'App\\HttpController\\',$depth = 5,$maxPoolNum = 20)
     {
-        $this->dispatcher = new Dispatcher($controllerNameSpace,$depth);
+        $this->dispatcher = new Dispatcher($controllerNameSpace,$depth,$maxPoolNum);
     }
 
     function setExceptionHandler(callable $handler)

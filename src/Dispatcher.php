@@ -26,7 +26,7 @@ class Dispatcher
      * 这部分的进程对象池，单独实现
      */
     private $controllerPool = [];
-    private $controllerPoolInfo = [];
+    private $controllerCreateNum = [];
     private $waitList = null;
 
     function __construct($controllerNameSpace,$maxDepth = 5,$maxPoolNum = 20)
@@ -34,7 +34,7 @@ class Dispatcher
         $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
         $this->maxDepth = $maxDepth;
         $this->maxPoolNum = $maxPoolNum;
-        $this->waitList = new \SplQueue();
+        $this->waitList = [];
     }
 
     function setExceptionHandler(callable $handler):void
@@ -91,7 +91,7 @@ class Dispatcher
                 }catch (\Throwable $throwable){
                     $this->hookThrowable($throwable,$request,$response);
                 }finally {
-                    $this->recycleController($finalClass,$c);
+                    $this->recycleController($finalClass,$c,$request,$response);
                 }
             }else{
                 $throwable = new ControllerPoolEmpty('controller pool empty for '.$finalClass);
@@ -108,54 +108,85 @@ class Dispatcher
         }
     }
 
+    /**
+     * @param string $class
+     * @return mixed
+     * @throws ControllerError
+     */
     protected function getController(string $class)
     {
-        if(!isset($this->controllerPool[$class])){
-            $this->controllerPool[$class] = new \SplQueue();
+        $classKey = $this->generateClassKey($class);
+        if(!isset($this->controllerPool[$classKey])){
+            $this->controllerPool[$classKey] = new \SplQueue();
+            $this->controllerCreateNum[$classKey] = 0;
+            $this->waitList[$classKey] = [];
         }
-        $pool = $this->controllerPool[$class];
+        $pool = $this->controllerPool[$classKey];
         //懒惰创建模式
+        /** @var \SplQueue $pool */
         if($pool->isEmpty()){
-            if(!isset($this->controllerPoolInfo[$class])){
-                $this->controllerPoolInfo[$class] = 0;
-            }
-            $createNum = $this->controllerPoolInfo[$class];
+            $createNum = $this->controllerCreateNum[$classKey];
             if($createNum < $this->maxPoolNum){
-                $this->controllerPoolInfo[$class] = $createNum+1;
+                $this->controllerCreateNum[$classKey] = $createNum+1;
                 try{
                     //防止用户在控制器结构函数做了什么东西导致异常
                     return new $class();
                 }catch (\Throwable $exception){
-                    $this->controllerPoolInfo[$class] = $createNum;
+                    $this->controllerCreateNum[$classKey] = $createNum;
                     //直接抛给上层
                     throw new ControllerError($exception->getMessage());
                 }
             }
             $cid = co::getUid();
-            $this->waitList->enqueue($cid);
-            co::suspend();
-            return $pool->dequeue();
+            array_push($this->waitList[$classKey],$cid);
+            co::suspend($cid);//挂起携程。等待恢复
+            /*
+             * 携程恢复后，需要再次判断。因为recycleController用户可能抛出异常
+             */
+            if(!$pool->isEmpty()){
+                return $pool->dequeue();
+            }else{
+                return null;
+            }
         }
         return $pool->dequeue();
     }
 
-    protected function recycleController(string $class,Controller $obj)
+    protected function recycleController(string $class,Controller $obj,Request $request,Response $response)
     {
-        $obj->objectRestore();
-        ($this->controllerPool[$class])->enqueue($obj);
-        if(!$this->waitList->isEmpty()){
-            co::resume($this->waitList->dequeue());
+        $classKey = $this->generateClassKey($class);
+        try{
+            $obj->objectRestore();
+            ($this->controllerPool[$classKey])->enqueue($obj);
+        }catch(\Throwable $throwable)
+        {
+            $this->hookThrowable($throwable,$request,$response);
+        }finally{
+            //无论如何，恢复一个就近的协程等待，防止全部用户卡死。
+            if(!empty($this->waitList[$classKey])){
+                co::resume(array_shift($this->waitList[$classKey]));
+            }
         }
     }
 
     protected function hookThrowable(\Throwable $throwable,Request $request,Response $response)
     {
         if(is_callable($this->exceptionHandler)){
-            call_user_func($this->exceptionHandler,$throwable,$request,$response);
+            //预防用户自己错误处理出错
+            try{
+                call_user_func($this->exceptionHandler,$throwable,$request,$response);
+            }catch (\Throwable $throwable){
+                Trigger::throwable($throwable);
+            }
         }else{
             $response->withStatus(Status::CODE_INTERNAL_SERVER_ERROR);
             $response->write(nl2br($throwable->getMessage()."\n".$throwable->getTraceAsString()));
             Trigger::throwable($throwable);
         }
+    }
+
+    protected function generateClassKey(string $class):string
+    {
+        return substr(md5($class), 8, 16);
     }
 }
