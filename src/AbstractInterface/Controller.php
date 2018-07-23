@@ -31,7 +31,16 @@ abstract class Controller extends AbstractObject
         foreach ($public as $item){
             array_push($list,$item->getName());
         }
-        $this->allowMethods = array_diff($list,['__construct','__hook','objectRestore','__destruct']);
+        $this->allowMethods = array_diff($list,
+            [
+                '__hook','objectRestore','__destruct',
+                '__clone','__construct','__call',
+                '__callStatic','__get','__set',
+                '__isset','__unset','__sleep',
+                '__wakeup','__toString','__invoke',
+                '__set_state','__clone','__debugInfo'
+            ]
+        );
     }
 
     abstract function index();
