@@ -130,4 +130,14 @@ abstract class Controller extends AbstractObject
             return false;
         }
     }
+
+    protected function json():?array
+    {
+        return json_decode($this->request()->getBody()->__toString(),true);
+    }
+
+    protected function xml($options = LIBXML_NOERROR,string $className = 'SimpleXMLElement')
+    {
+        return simplexml_load_string($this->request()->getBody()->__toString(), $className,$options);
+    }
 }
