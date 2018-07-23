@@ -13,6 +13,7 @@ use EasySwoole\Component\Pool\AbstractObject;
 use EasySwoole\Http\Message\Status;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
+use EasySwoole\Validate\Validate;
 
 abstract class Controller extends AbstractObject
 {
@@ -139,5 +140,10 @@ abstract class Controller extends AbstractObject
     protected function xml($options = LIBXML_NOERROR,string $className = 'SimpleXMLElement')
     {
         return simplexml_load_string($this->request()->getBody()->__toString(), $className,$options);
+    }
+
+    protected function validate(Validate $validate)
+    {
+        return $validate->validate($this->request()->getRequestParam());
     }
 }
