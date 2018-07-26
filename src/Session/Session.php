@@ -115,6 +115,7 @@ class Session
     function destroy()
     {
         if($this->isStart){
+            $this->data = [];
             $this->handler->destroy($this->sid);
             return true;
         }else{
@@ -126,10 +127,10 @@ class Session
     {
         if($this->isStart){
             $this->isStart = false;
-            $this->handler->close();
             if(!$this->handler->write($this->sid,\swoole_serialize::pack($this->data,0))){
                 Trigger::error("save session {$this->sessionName}@{$this->sid} fail");
             }
+            $this->handler->close();
             $this->resetStatus();
         }
     }
