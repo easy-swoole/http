@@ -53,7 +53,7 @@ abstract class Controller
         $this->request = null;
         $this->response = null;
         if($this->session instanceof Session){
-            $this->session->close();
+            $this->session->writeClose();
             $this->session = null;
         }
     }
@@ -160,7 +160,7 @@ abstract class Controller
     {
         // TODO: Implement __destruct() method.
         if($this->session instanceof Session){
-            $this->session->close();
+            $this->session->writeClose();
             $this->session = null;
         }
     }

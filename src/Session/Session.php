@@ -23,6 +23,7 @@ class Session
     private $sessionName = 'EasySwoole';
     private $savePath;
     private $data = [];
+
     function __construct(Request $request,Response $response,\SessionHandlerInterface $sessionHandler = null)
     {
         $this->request = $request;
@@ -106,33 +107,32 @@ class Session
             return null;
         }
     }
-
+    /*
+     * 根据规范，session_destroy() 销毁当前会话中的全部数据，
+     * 但是不会重置当前会话所关联的全局变量， 也不会重置会话 cookie。 如果需要再次使用会话变量，
+     *  必须重新调用 session_start() 函数。
+     */
     function destroy()
     {
         if($this->isStart){
             $this->handler->destroy($this->sid);
-            $this->close();
             return true;
         }else{
             return false;
         }
     }
 
-    function close()
+    function writeClose()
     {
         if($this->isStart){
             $this->isStart = false;
+            $this->handler->close();
             if(!$this->handler->write($this->sid,\swoole_serialize::pack($this->data,0))){
                 Trigger::error("save session {$this->sessionName}@{$this->sid} fail");
             }
-            $this->handler->close();
-            $this->sid = null;
-            $this->sessionName = 'easySwoole';
-            $this->savePath = null;
-            $this->data = [];
+            $this->resetStatus();
         }
     }
-
 
     function start():bool
     {
@@ -144,7 +144,7 @@ class Session
             }else{
                 //开启成功，则准备sid;
                 $this->sid = $this->generateSid();
-                //载入数据
+                //载入数据,实现原则中，start后则对Session文件加锁
                 $data = $this->handler->read($this->sid);
                 if(!empty($data)){
                     $data = \swoole_serialize::unpack($data);
@@ -179,6 +179,14 @@ class Session
 
     function __destruct()
     {
-        $this->close();
+        $this->writeClose();
+    }
+
+    private function resetStatus()
+    {
+        $this->sid = null;
+        $this->sessionName = 'EasySwoole';
+        $this->savePath = null;
+        $this->data = [];
     }
 }

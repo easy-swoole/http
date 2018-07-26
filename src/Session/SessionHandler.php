@@ -29,10 +29,9 @@ class SessionHandler implements \SessionHandlerInterface
     public function destroy($session_id)
     {
         // TODO: Implement destroy() method.
-        $this->close();
-        $file = "{$this->savePath}/{$this->sessionName}_{$session_id}";
-        if(file_exists($file)){
-            unlink($file);
+        if($this->fp instanceof SplFileStream){
+            $this->fp->truncate(0);
+            $this->fp->seek(0);
         }
     }
 
