@@ -1,7 +1,7 @@
 # EasySwoole HTTP 服务组件
 
 一个轻量级的HTTP Dispatch组件
-
+## Server Script
 ```
 require 'vendor/autoload.php';
 
@@ -20,3 +20,55 @@ $http->on("request", function ($request, $response)use($service) {
 
 $http->start();
 ```
+
+## Controller Folder
+```
+namespace App\HttpController;
+
+
+use EasySwoole\Http\AbstractInterface\Controller;
+
+class Index extends Controller
+{
+
+    function index()
+    {
+        // TODO: Implement index() method
+        $this->response()->write('hello world');
+    }
+
+    function actionNotFound($action): void
+    {
+        $this->response()->write("{$action} not found");
+    }
+
+    function testSession()
+    {
+        $this->session()->start();
+        $this->session()->set('a',1);
+        $this->session()->writeClose();
+    }
+
+    function testSession2()
+    {
+        $this->session()->start();
+        $this->response()->write($this->session()->get('a'));
+    }
+
+    function testException()
+    {
+        new NoneClass();
+    }
+
+    protected function onException(\Throwable $throwable): void
+    {
+        $this->response()->write($throwable->getMessage());
+    }
+
+    public function gc()
+    {
+        var_dump('class :'.static::class.' is recycle to pool');
+    }
+}
+```
+
