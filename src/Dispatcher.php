@@ -156,7 +156,7 @@ class Dispatcher
     {
         $classKey = $this->generateClassKey($class);
         try{
-            $obj->objectRestore();
+            $obj->gc();
             ($this->controllerPool[$classKey])->enqueue($obj);
         }catch(\Throwable $throwable)
         {

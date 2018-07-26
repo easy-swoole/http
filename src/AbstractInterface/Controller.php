@@ -8,18 +8,18 @@
 
 namespace EasySwoole\Http\AbstractInterface;
 
-
-use EasySwoole\Component\Pool\AbstractObject;
 use EasySwoole\Http\Message\Status;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
+use EasySwoole\Http\Session\Session;
 use EasySwoole\Validate\Validate;
 
-abstract class Controller extends AbstractObject
+abstract class Controller
 {
     private $request;
     private $response;
     private $actionName;
+    private $session;
 
     private $allowMethods = [];
 
@@ -34,7 +34,7 @@ abstract class Controller extends AbstractObject
         }
         $this->allowMethods = array_diff($list,
             [
-                '__hook','objectRestore','__destruct',
+                'gc','__hook','__destruct',
                 '__clone','__construct','__call',
                 '__callStatic','__get','__set',
                 '__isset','__unset','__sleep',
@@ -46,19 +46,17 @@ abstract class Controller extends AbstractObject
 
     abstract function index();
 
-    protected function gc()
+    public function gc()
     {
         // TODO: Implement gc() method.
-    }
-
-    function objectRestore()
-    {
-        // TODO: Implement objectRestore() method.
         $this->actionName = null;
         $this->request = null;
         $this->response = null;
+        if($this->session instanceof Session){
+            $this->session->close();
+            $this->session = null;
+        }
     }
-
 
     protected function actionNotFound($action):void
     {
@@ -145,5 +143,25 @@ abstract class Controller extends AbstractObject
     protected function validate(Validate $validate)
     {
         return $validate->validate($this->request()->getRequestParam());
+    }
+
+    protected function session(\SessionHandlerInterface $sessionHandler = null):Session
+    {
+        if($this->session == null){
+            $this->session = new Session($this->request,$this->response,$sessionHandler);
+        }
+        return $this->session;
+    }
+
+    /*
+     * 对象回收时，注意释放Session
+     */
+    function __destruct()
+    {
+        // TODO: Implement __destruct() method.
+        if($this->session instanceof Session){
+            $this->session->close();
+            $this->session = null;
+        }
     }
 }

@@ -28,6 +28,7 @@ class Response extends MessageResponse
     {
         $this->response = $response;
         parent::__construct();
+        $this->withAddedHeader('Server','EasySwoole');
     }
 
     function end($status = self::STATUS_LOGICAL_END){
