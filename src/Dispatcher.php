@@ -9,15 +9,19 @@
 namespace EasySwoole\Http;
 
 
+use EasySwoole\Http\AbstractInterface\AbstractRouter;
 use EasySwoole\Http\AbstractInterface\Controller;
 use EasySwoole\Http\Exceptions\ControllerError;
 use EasySwoole\Http\Exceptions\ControllerPoolEmpty;
 use EasySwoole\Http\Message\Status;
 use EasySwoole\Trigger\Trigger;
 use Swoole\Coroutine as Co;
+use FastRoute\Dispatcher\GroupCountBased;
 
 class Dispatcher
 {
+    private $router = null;
+    private $routerRegister = null;
     private $controllerNameSpacePrefix;
     private $maxDepth;
     private $maxPoolNum;
@@ -35,6 +39,20 @@ class Dispatcher
         $this->maxDepth = $maxDepth;
         $this->maxPoolNum = $maxPoolNum;
         $this->waitList = [];
+        $class = $this->controllerNameSpacePrefix.'\\Router';
+        try{
+            if(class_exists($class)){
+                $ref = new \ReflectionClass($class);
+                if($ref->isSubclassOf(AbstractRouter::class)){
+                    $this->routerRegister =  $ref->newInstance();
+                    $this->router = new GroupCountBased($this->routerRegister->getRouteCollector()->getData());
+                }else{
+                    Trigger::error("class : {$class} not AbstractRouter class");
+                }
+            }
+        }catch (\Throwable $throwable){
+            Trigger::throwable($throwable);
+        }
     }
 
     function setExceptionHandler(callable $handler):void
@@ -44,12 +62,65 @@ class Dispatcher
 
     public function dispatch(Request $request,Response $response):void
     {
-        $this->controllerHandler($request,$response);
+        $path = UrlParser::pathInfo($request->getUri()->getPath());
+        if($this->router instanceof GroupCountBased){
+            $handler = null;
+            $routeInfo = $this->router->dispatch($request->getMethod(),$path);
+            if($routeInfo !== false){
+                switch ($routeInfo[0]) {
+                    case \FastRoute\Dispatcher::NOT_FOUND:{
+                        $handler = $this->routerRegister->getRouterNotFoundCallBack();
+                        break;
+                    }
+                    case \FastRoute\Dispatcher::METHOD_NOT_ALLOWED:{
+                        $handler = $this->routerRegister->getMethodNotAllowCallBack();
+                        break;
+                    }
+                    case \FastRoute\Dispatcher::FOUND:{
+                        $func = $routeInfo[1];
+                        $vars = $routeInfo[2];
+                        if(is_callable($func)){
+                            try{
+                                call_user_func_array($func,array_merge([$request,$response],array_values($vars)));
+                            }catch (\Throwable $throwable){
+                                Trigger::throwable($throwable);
+                            }
+                        }else if(is_string($func)){
+                            $data = $request->getQueryParams();
+                            $request->withQueryParams($vars+$data);
+                            $pathInfo = UrlParser::pathInfo($func);
+                            $request->getUri()->withPath($pathInfo);
+                        }
+                        break;
+                    }
+                    default:{
+                        $handler = $this->routerRegister->getRouterNotFoundCallBack();
+                        break;
+                    }
+                }
+            }
+            /*
+             * 全局模式的时候，都拦截。非全局模式，否则继续往下
+             */
+            if($this->routerRegister->isGlobalMode()){
+                if(is_callable($handler)){
+                    try{
+                        call_user_func($handler,$request,$response);
+                    }catch (\Throwable $throwable){
+                        Trigger::throwable($throwable);
+                    }
+                }
+                return;
+            }
+        }
+        if(!$response->isEndResponse()){
+            $this->controllerHandler($request,$response,$path);
+        };
     }
 
-    private function controllerHandler(Request $request,Response $response)
+    private function controllerHandler(Request $request,Response $response,string $path)
     {
-        $pathInfo = ltrim(UrlParser::pathInfo($request->getUri()->getPath()),"/");
+        $pathInfo = ltrim($path,"/");
         $list = explode("/",$pathInfo);
         $actionName = null;
         $finalClass = null;
