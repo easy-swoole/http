@@ -63,7 +63,7 @@ abstract class Controller
         $this->response()->withStatus(Status::CODE_NOT_FOUND);
     }
 
-    protected function afterAction($actionName):void
+    protected function afterAction(?string $actionName):void
     {
 
     }
@@ -73,12 +73,12 @@ abstract class Controller
         throw $throwable ;
     }
 
-    protected function onRequest($action):?bool
+    protected function onRequest(?string $action):?bool
     {
         return true;
     }
 
-    protected function getActionName():string
+    protected function getActionName():?string
     {
         return $this->actionName;
     }
