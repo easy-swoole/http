@@ -33,7 +33,7 @@ class Dispatcher
     private $controllerCreateNum = [];
     private $waitList = null;
 
-    function __construct($controllerNameSpace,$maxDepth = 5,$maxPoolNum = 20)
+    function __construct($controllerNameSpace,$maxDepth = 5,$maxPoolNum = 100)
     {
         $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
         $this->maxDepth = $maxDepth;
