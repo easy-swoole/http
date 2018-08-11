@@ -81,7 +81,10 @@ class ServerRequest extends Request
         return $this->uploadedFiles;
     }
 
-    public function getUploadedFile($name):?UploadFile
+    /*
+     * 适配二维数组方式上传
+     */
+    public function getUploadedFile($name)
     {
         // TODO: Implement getUploadedFiles() method.
         if(isset($this->uploadedFiles[$name])){

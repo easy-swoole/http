@@ -93,19 +93,31 @@ class Request  extends ServerRequest
     {
         if(isset($this->request->files)){
             $normalized = array();
-            foreach ($this->request->files as $key => $value) {
-                $normalized[$key] = new UploadFile(
-                    $value['tmp_name'],
-                    (int) $value['size'],
-                    (int) $value['error'],
-                    $value['name'],
-                    $value['type']
-                );
+            foreach($this->request->files as $key => $value){
+                if(is_array($value) && !isset($value['tmp_name'])){
+                    $normalized[$key] = [];
+                    foreach($value as $file){
+                        $normalized[$key][] = $this->initFile($file);
+                    }
+                    continue;
+                }
+                $normalized[$key] = $this->initFile($value);
             }
             return $normalized;
         }else{
             return array();
         }
+    }
+
+    private function initFile(array $file)
+    {
+        return new UploadFile(
+            $file['tmp_name'],
+            (int) $file['size'],
+            (int) $file['error'],
+            $file['name'],
+            $file['type']
+        );
     }
 
     private function initCookie()
@@ -128,4 +140,6 @@ class Request  extends ServerRequest
         // TODO: Implement __toString() method.
         return Utility::toString($this);
     }
+
+
 }
