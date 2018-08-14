@@ -11,7 +11,6 @@ namespace EasySwoole\Http\Session;
 
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
-use EasySwoole\Trigger\Trigger;
 
 class Session
 {
@@ -128,7 +127,7 @@ class Session
         if($this->isStart){
             $this->isStart = false;
             if(!$this->handler->write($this->sid,\swoole_serialize::pack($this->data,0))){
-                Trigger::error("save session {$this->sessionName}@{$this->sid} fail");
+                trigger_error("save session {$this->sessionName}@{$this->sid} fail");
             }
             $this->handler->close();
             $this->resetStatus();
@@ -140,7 +139,7 @@ class Session
         if(!$this->isStart){
             $this->isStart = $this->handler->open($this->savePath,$this->sessionName);
             if(!$this->isStart){
-                Trigger::error("session open {$this->savePath}@{$this->sessionName} fail");
+                trigger_error("session open {$this->savePath}@{$this->sessionName} fail");
                 return false;
             }else{
                 //开启成功，则准备sid;

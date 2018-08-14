@@ -17,9 +17,9 @@
         "easyswoole/spl": "^1.0",
         "easyswoole/curl": "^1.0",
         "easyswoole/component": "^1.0",
-        "easyswoole/trigger": "^1.0",
         "easyswoole/validate": "^1.0",
-        "nikic/fast-route": "^1.3"
+        "nikic/fast-route": "^1.3",
+        "easyswoole/trace": "^1.0"
     },
     "autoload": {
         "psr-4": {
