@@ -42,6 +42,7 @@ class Dispatcher
         $this->maxPoolNum = $maxPoolNum;
         $this->waitList = [];
         $class = $this->controllerNameSpacePrefix.'\\Router';
+
         try{
             if(class_exists($class)){
                 $ref = new \ReflectionClass($class);
@@ -53,7 +54,7 @@ class Dispatcher
                 }
             }
         }catch (\Throwable $throwable){
-            $this->trigger->error($throwable->getMessage().$throwable->getTraceAsString());
+            $this->trigger->throwable($throwable);
         }
     }
 
@@ -88,6 +89,7 @@ class Dispatcher
                                 $this->trigger->throwable($throwable);
                             }
                         }else if(is_string($func)){
+                            $path = $func;
                             $data = $request->getQueryParams();
                             $request->withQueryParams($vars+$data);
                             $pathInfo = UrlParser::pathInfo($func);
