@@ -90,7 +90,7 @@ abstract class Controller
         $this->actionName = $actionName;
         try{
             if($this->onRequest($actionName) !== false){
-                if(in_array($actionName,$this->allowMethods)){
+                if(in_array(strtolower($actionName), array_map('strtolower', $this->allowMethods))){
                     $this->$actionName();
                 }else{
                     $this->actionNotFound($actionName);
