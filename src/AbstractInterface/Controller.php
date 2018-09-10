@@ -49,9 +49,11 @@ abstract class Controller
     public function gc()
     {
         // TODO: Implement gc() method.
-        $this->actionName = null;
-        $this->request = null;
-        $this->response = null;
+        //自动重置父类全部属性，子类public，protected自动重置
+        $list = get_class_vars(static::class);
+        foreach ($list as $property => $value){
+            $this->$property = $value;
+        }
         if($this->session instanceof Session){
             $this->session->writeClose();
             $this->session = null;
