@@ -30,17 +30,17 @@ abstract class Controller
         $ref = new \ReflectionClass(static::class);
         $public = $ref->getMethods(\ReflectionMethod::IS_PUBLIC);
         foreach ($public as $item){
-            array_push($list,$item->getName());
+            array_push($list,strtolower($item->getName()));
         }
         $this->allowMethods = array_diff($list,
-            [
+            array_map('strtolower', [
                 'gc','__hook','__destruct',
                 '__clone','__construct','__call',
                 '__callStatic','__get','__set',
                 '__isset','__unset','__sleep',
                 '__wakeup','__toString','__invoke',
                 '__set_state','__clone','__debugInfo'
-            ]
+            ])
         );
     }
 
@@ -92,7 +92,7 @@ abstract class Controller
         $this->actionName = $actionName;
         try{
             if($this->onRequest($actionName) !== false){
-                if(in_array($actionName,$this->allowMethods)){
+                if(in_array(strtolower($actionName), $this->allowMethods)){
                     $this->$actionName();
                 }else{
                     $this->actionNotFound($actionName);
