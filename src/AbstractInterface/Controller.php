@@ -52,7 +52,9 @@ abstract class Controller
         //自动重置父类全部属性，子类public，protected自动重置
         $list = get_class_vars(static::class);
         foreach ($list as $property => $value){
-            $this->$property = $value;
+            if ($property !== 'allowMethods'){
+                $this->$property = $value;
+            }
         }
         if($this->session instanceof Session){
             $this->session->writeClose();
