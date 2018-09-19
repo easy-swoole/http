@@ -95,6 +95,8 @@ class Dispatcher
                             $pathInfo = UrlParser::pathInfo($func);
                             $request->getUri()->withPath($pathInfo);
                         }
+                        //命中路由的时候，直接跳转到分发逻辑
+                        goto dispatch;
                         break;
                     }
                     default:{
@@ -103,21 +105,23 @@ class Dispatcher
                     }
                 }
             }
-            /*
-             * 全局模式的时候，都拦截。非全局模式，否则继续往下
-             */
-            if($this->routerRegister->isGlobalMode()){
-                if(is_callable($handler)){
-                    try{
-                        call_user_func($handler,$request,$response);
-                    }catch (\Throwable $throwable){
-                        $this->trigger->throwable($throwable);
-                    }
+            //如果handler不为null，那么说明，非为 \FastRoute\Dispatcher::FOUND ，因此执行
+            if(is_callable($handler)){
+                try{
+                    call_user_func($handler,$request,$response);
+                }catch (\Throwable $throwable){
+                    $this->trigger->throwable($throwable);
                 }
-                return;
             }
         }
-        if(!$response->isEndResponse()){
+        /*
+        * 全局模式的时候，都拦截。非全局模式，否则继续往下
+        */
+        if($this->routerRegister->isGlobalMode() || $response->isEndResponse()){
+            return;
+        }
+
+        dispatch :{
             $this->controllerHandler($request,$response,$path);
         };
     }
