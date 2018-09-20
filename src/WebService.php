@@ -9,14 +9,12 @@
 namespace EasySwoole\Http;
 
 
-use EasySwoole\Trace\Trigger;
-
 class WebService
 {
     private $dispatcher;
-    final function __construct($controllerNameSpace = 'App\\HttpController\\',Trigger $trigger,$depth = 5,$maxPoolNum = 100)
+    final function __construct($controllerNameSpace = 'App\\HttpController\\',$depth = 5,$maxPoolNum = 100)
     {
-        $this->dispatcher = new Dispatcher($controllerNameSpace,$trigger,$depth,$maxPoolNum);
+        $this->dispatcher = new Dispatcher($controllerNameSpace,$depth,$maxPoolNum);
     }
 
     function setExceptionHandler(callable $handler)

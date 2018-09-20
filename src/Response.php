@@ -33,7 +33,8 @@ class Response extends MessageResponse
 
     function end($status = self::STATUS_LOGICAL_END){
         $this->isEndResponse = self::STATUS_LOGICAL_END;
-        if($status == self::STATUS_REAL_END){
+        //发送文件的时候，底层自动end,不需要手动end
+        if($status == self::STATUS_REAL_END && (!$this->sendFile)){
             $this->response->end();
         }
     }

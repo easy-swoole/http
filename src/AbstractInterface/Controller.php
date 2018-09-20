@@ -34,7 +34,7 @@ abstract class Controller
         }
         $this->allowMethods = array_diff($list,
             [
-                'gc','__hook','__destruct',
+                '__hook','__destruct',
                 '__clone','__construct','__call',
                 '__callStatic','__get','__set',
                 '__isset','__unset','__sleep',
@@ -46,18 +46,18 @@ abstract class Controller
 
     abstract function index();
 
-    public function gc()
+    protected function gc()
     {
         // TODO: Implement gc() method.
+        if($this->session instanceof Session){
+            $this->session->writeClose();
+            $this->session = null;
+        }
         //自动重置父类全部属性，子类public，protected自动重置
         $list = get_class_vars(static::class);
         unset($list['allowMethods']);
         foreach ($list as $property => $value){
             $this->$property = $value;
-        }
-        if($this->session instanceof Session){
-            $this->session->writeClose();
-            $this->session = null;
         }
     }
 
@@ -105,6 +105,12 @@ abstract class Controller
         }finally{
             $this->afterAction($actionName);
         }
+        try{
+            $this->gc();
+        }catch (\Throwable $throwable){
+            $this->onException($throwable);
+        }
+
     }
 
     protected function request():Request

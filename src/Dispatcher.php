@@ -14,7 +14,6 @@ use EasySwoole\Http\AbstractInterface\Controller;
 use EasySwoole\Http\Exceptions\ControllerError;
 use EasySwoole\Http\Exceptions\ControllerPoolEmpty;
 use EasySwoole\Http\Message\Status;
-use EasySwoole\Trace\Trigger;
 use Swoole\Coroutine as Co;
 use FastRoute\Dispatcher\GroupCountBased;
 
@@ -26,7 +25,6 @@ class Dispatcher
     private $maxDepth;
     private $maxPoolNum;
     private $httpExceptionHandler = null;
-    private $trigger;
     /*
      * 这部分的进程对象池，单独实现
      */
@@ -34,15 +32,13 @@ class Dispatcher
     private $controllerCreateNum = [];
     private $waitList = null;
 
-    function __construct($controllerNameSpace,Trigger $trigger,$maxDepth = 5,$maxPoolNum = 100)
+    function __construct($controllerNameSpace,$maxDepth = 5,$maxPoolNum = 100)
     {
-        $this->trigger = $trigger;
         $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
         $this->maxDepth = $maxDepth;
         $this->maxPoolNum = $maxPoolNum;
         $this->waitList = [];
         $class = $this->controllerNameSpacePrefix.'\\Router';
-
         try{
             if(class_exists($class)){
                 $ref = new \ReflectionClass($class);
@@ -50,11 +46,11 @@ class Dispatcher
                     $this->routerRegister =  $ref->newInstance();
                     $this->router = new GroupCountBased($this->routerRegister->getRouteCollector()->getData());
                 }else{
-                    $this->trigger->error("class : {$class} not AbstractRouter class");
+                    throw new \Exception("class : {$class} not AbstractRouter class");
                 }
             }
         }catch (\Throwable $throwable){
-            $this->trigger->throwable($throwable);
+            throw new \Exception($throwable->getMessage());
         }
     }
 
@@ -86,7 +82,9 @@ class Dispatcher
                             try{
                                 call_user_func_array($func,array_merge([$request,$response],array_values($vars)));
                             }catch (\Throwable $throwable){
-                                $this->trigger->throwable($throwable);
+                                $this->hookThrowable($throwable,$request,$response);
+                                //出现异常的时候，不在往下dispatch
+                                return;
                             }
                         }else if(is_string($func)){
                             $path = $func;
@@ -110,7 +108,9 @@ class Dispatcher
                 try{
                     call_user_func($handler,$request,$response);
                 }catch (\Throwable $throwable){
-                    $this->trigger->throwable($throwable);
+                    $this->hookThrowable($throwable,$request,$response);
+                    //出现异常的时候，不在往下dispatch
+                    return;
                 }
             }
         }
@@ -234,33 +234,20 @@ class Dispatcher
     protected function recycleController(string $class,Controller $obj,Request $request,Response $response)
     {
         $classKey = $this->generateClassKey($class);
-        try{
-            $obj->gc();
-            ($this->controllerPool[$classKey])->enqueue($obj);
-        }catch(\Throwable $throwable)
-        {
-            $this->hookThrowable($throwable,$request,$response);
-        }finally{
-            //无论如何，恢复一个就近的协程等待，防止全部用户卡死。
-            if(!empty($this->waitList[$classKey])){
-                Co::resume(array_shift($this->waitList[$classKey]));
-            }
+        ($this->controllerPool[$classKey])->enqueue($obj);
+        //无论如何，恢复一个就近的协程等待，防止全部用户卡死。
+        if(!empty($this->waitList[$classKey])){
+            Co::resume(array_shift($this->waitList[$classKey]));
         }
     }
 
     protected function hookThrowable(\Throwable $throwable,Request $request,Response $response)
     {
         if(is_callable($this->httpExceptionHandler)){
-            //预防用户自己错误处理出错
-            try{
-                call_user_func($this->httpExceptionHandler,$throwable,$request,$response);
-            }catch (\Throwable $throwable){
-                $this->trigger->throwable($throwable);
-            }
+            call_user_func($this->httpExceptionHandler,$throwable,$request,$response);
         }else{
             $response->withStatus(Status::CODE_INTERNAL_SERVER_ERROR);
             $response->write(nl2br($throwable->getMessage()."\n".$throwable->getTraceAsString()));
-            $this->trigger->throwable($throwable);
         }
     }
 
