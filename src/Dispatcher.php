@@ -113,11 +113,16 @@ class Dispatcher
                     return;
                 }
             }
+            /*
+                * 全局模式的时候，都拦截。非全局模式，否则继续往下
+            */
+            if($this->routerRegister->isGlobalMode()){
+                return;
+            }
         }
-        /*
-        * 全局模式的时候，都拦截。非全局模式，否则继续往下
-        */
-        if($this->routerRegister->isGlobalMode() || $response->isEndResponse()){
+
+        //如果路由中结束了响应，则不再往下
+        if($response->isEndResponse()){
             return;
         }
 
