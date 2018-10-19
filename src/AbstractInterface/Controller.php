@@ -146,6 +146,8 @@ abstract class Controller
 
     protected function xml($options = LIBXML_NOERROR,string $className = 'SimpleXMLElement')
     {
+        //禁止引用外部xml实体
+        libxml_disable_entity_loader(true);
         return simplexml_load_string($this->request()->getBody()->__toString(), $className,$options);
     }
 
