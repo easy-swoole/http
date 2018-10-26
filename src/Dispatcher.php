@@ -31,8 +31,10 @@ class Dispatcher
     private $controllerPool = [];
     private $controllerCreateNum = [];
     private $waitList = null;
-
-    function __construct($controllerNameSpace,$maxDepth = 5,$maxPoolNum = 100)
+    /*
+     * 默认每个进程15个控制器，若每个控制器一个持久连接，那么8 worker  就是120连接了
+     */
+    function __construct($controllerNameSpace,$maxDepth = 5,$maxPoolNum = 15)
     {
         $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
         $this->maxDepth = $maxDepth;
