@@ -22,6 +22,7 @@ abstract class Controller
     private $session;
 
     private $allowMethods = [];
+    private $defaultProperties = [];
 
     function __construct()
     {
@@ -42,6 +43,17 @@ abstract class Controller
                 '__set_state','__clone','__debugInfo'
             ]
         );
+
+        //获取，生成属性默认值
+        $ref = new \ReflectionClass(static::class);
+        $properties = $ref->getProperties();
+        foreach ($properties as $property){
+            //不重置静态变量
+            if(($property->isPublic() || $property->isProtected()) && !$property->isStatic()){
+                $name = $property->getName();
+                $this->defaultProperties[$name] = $this->$name;
+            }
+        }
     }
 
     abstract function index();
@@ -53,10 +65,8 @@ abstract class Controller
             $this->session->writeClose();
             $this->session = null;
         }
-        //自动重置父类全部属性，子类public，protected自动重置
-        $list = get_class_vars(static::class);
-        unset($list['allowMethods']);
-        foreach ($list as $property => $value){
+        //恢复默认值
+        foreach ($this->defaultProperties as $property => $value){
             $this->$property = $value;
         }
     }
