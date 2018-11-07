@@ -141,5 +141,10 @@ class Request  extends ServerRequest
         return Utility::toString($this);
     }
 
+    public function __destruct()
+    {
+        // TODO: Implement __destruct() method.
+        $this->getBody()->close();
+    }
 
 }

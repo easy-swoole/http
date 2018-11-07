@@ -63,8 +63,6 @@ class Response extends MessageResponse
             if($this->sendFile != null){
                 $this->response->sendfile($this->sendFile);
             }
-
-            $this->getBody()->close();
             $this->end(self::STATUS_REAL_END);
             return true;
         }else{
@@ -148,5 +146,11 @@ class Response extends MessageResponse
     {
         // TODO: Implement __toString() method.
         return Utility::toString($this);
+    }
+
+    public function __destruct()
+    {
+        // TODO: Implement __destruct() method.
+        $this->getBody()->close();
     }
 }
