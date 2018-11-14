@@ -126,7 +126,7 @@ class Session
     {
         if($this->isStart){
             $this->isStart = false;
-            if(!$this->handler->write($this->sid,\swoole_serialize::pack($this->data,0))){
+            if(!$this->handler->write($this->sid,serialize($this->data))){
                 trigger_error("save session {$this->sessionName}@{$this->sid} fail");
             }
             $this->handler->close();
@@ -147,7 +147,7 @@ class Session
                 //载入数据,实现原则中，start后则对Session文件加锁
                 $data = $this->handler->read($this->sid);
                 if(!empty($data)){
-                    $data = \swoole_serialize::unpack($data);
+                    $data = unserialize($data);
                     if(is_array($data)){
                         $this->data = $data;
                     }
