@@ -25,6 +25,6 @@ class WebService
     function onRequest(Request $request_psr,Response $response_psr):void
     {
         $this->dispatcher->dispatch($request_psr,$response_psr);
-        $response_psr->response();
+        $response_psr->__response();
     }
 }

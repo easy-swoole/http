@@ -39,7 +39,7 @@ class Response extends MessageResponse
         }
     }
 
-    function response():bool
+    function __response():bool
     {
         if($this->isEndResponse <= self::STATUS_REAL_END){
             //结束处理
