@@ -11,7 +11,6 @@ namespace EasySwoole\Http;
 
 use EasySwoole\Http\AbstractInterface\AbstractRouter;
 use EasySwoole\Http\AbstractInterface\Controller;
-use EasySwoole\Http\Exceptions\ControllerError;
 use EasySwoole\Http\Exceptions\ControllerPoolEmpty;
 use EasySwoole\Http\Message\Status;
 use Swoole\Coroutine as Co;
@@ -24,22 +23,18 @@ class Dispatcher
     private $controllerNameSpacePrefix;
     private $maxDepth;
     private $maxPoolNum;
+    private $controllerPoolCreateNum = [];
     private $httpExceptionHandler = null;
-    /*
-     * 这部分的进程对象池，单独实现
-     */
-    private $controllerPool = [];
-    private $controllerCreateNum = [];
-    private $waitList = null;
+    private $controllerPoolWaitTime = 5;
+
     /*
      * 默认每个进程15个控制器，若每个控制器一个持久连接，那么8 worker  就是120连接了
      */
-    function __construct($controllerNameSpace,$maxDepth = 5,$maxPoolNum = 15)
+    function __construct(string $controllerNameSpace,int $maxDepth = 5,int $maxPoolNum = 15)
     {
         $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
-        $this->maxDepth = $maxDepth;
         $this->maxPoolNum = $maxPoolNum;
-        $this->waitList = [];
+        $this->maxDepth = $maxDepth;
         $class = $this->controllerNameSpacePrefix.'\\Router';
         try{
             if(class_exists($class)){
@@ -55,6 +50,15 @@ class Dispatcher
             throw new \Exception($throwable->getMessage());
         }
     }
+
+    /**
+     * @param int $controllerPoolWaitTime
+     */
+    public function setControllerPoolWaitTime(int $controllerPoolWaitTime): void
+    {
+        $this->controllerPoolWaitTime = $controllerPoolWaitTime;
+    }
+
 
     function setHttpExceptionHandler(callable $handler):void
     {
@@ -164,6 +168,7 @@ class Dispatcher
             }
             $maxDepth--;
         }
+
         if(!empty($finalClass)){
             try{
                 $c = $this->getController($finalClass);
@@ -177,7 +182,7 @@ class Dispatcher
                 }catch (\Throwable $throwable){
                     $this->hookThrowable($throwable,$request,$response);
                 }finally {
-                    $this->recycleController($finalClass,$c,$request,$response);
+                    $this->recycleController($finalClass,$c);
                 }
             }else{
                 $throwable = new ControllerPoolEmpty('controller pool empty for '.$finalClass);
@@ -194,58 +199,40 @@ class Dispatcher
         }
     }
 
-    /**
-     * @param string $class
-     * @return mixed
-     * @throws ControllerError
-     */
-    protected function getController(string $class)
+    protected function getController(string $class):?Controller
     {
         $classKey = $this->generateClassKey($class);
-        if(!isset($this->controllerPool[$classKey])){
-            $this->controllerPool[$classKey] = new \SplQueue();
-            $this->controllerCreateNum[$classKey] = 0;
-            $this->waitList[$classKey] = [];
+        if(!isset($this->$classKey)){
+            $this->$classKey = new Co\Channel($this->maxPoolNum+1);
+            $this->controllerPoolCreateNum[$classKey] = 0;
         }
-        $pool = $this->controllerPool[$classKey];
+        $channel = $this->$classKey;
         //懒惰创建模式
-        /** @var \SplQueue $pool */
-        if($pool->isEmpty()){
-            $createNum = $this->controllerCreateNum[$classKey];
+        /** @var Co\Channel $channel */
+        if($channel->isEmpty()){
+            $createNum = $this->controllerPoolCreateNum[$classKey];
             if($createNum < $this->maxPoolNum){
-                $this->controllerCreateNum[$classKey] = $createNum+1;
+                $this->controllerPoolCreateNum[$classKey] = $createNum+1;
                 try{
                     //防止用户在控制器结构函数做了什么东西导致异常
                     return new $class();
                 }catch (\Throwable $exception){
-                    $this->controllerCreateNum[$classKey] = $createNum;
+                    $this->controllerPoolCreateNum[$classKey] = $createNum;
                     //直接抛给上层
-                    throw new ControllerError($exception->getMessage());
+                    throw $exception;
                 }
             }
-            $cid = Co::getUid();
-            array_push($this->waitList[$classKey],$cid);
-            Co::suspend();//挂起携程。等待恢复
-            /*
-             * 携程恢复后，需要再次判断。因为recycleController用户可能抛出异常
-             */
-            if(!$pool->isEmpty()){
-                return $pool->dequeue();
-            }else{
-                return null;
-            }
+            return $channel->pop($this->controllerPoolWaitTime);
         }
-        return $pool->dequeue();
+        return $channel->pop($this->controllerPoolWaitTime);
     }
 
-    protected function recycleController(string $class,Controller $obj,Request $request,Response $response)
+    protected function recycleController(string $class,Controller $obj)
     {
         $classKey = $this->generateClassKey($class);
-        ($this->controllerPool[$classKey])->enqueue($obj);
-        //无论如何，恢复一个就近的协程等待，防止全部用户卡死。
-        if(!empty($this->waitList[$classKey])){
-            Co::resume(array_shift($this->waitList[$classKey]));
-        }
+        /** @var Co\Channel $channel */
+        $channel = $this->$classKey;
+        $channel->push($obj);
     }
 
     protected function hookThrowable(\Throwable $throwable,Request $request,Response $response)
