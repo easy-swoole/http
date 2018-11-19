@@ -225,7 +225,7 @@ class Dispatcher
             }
             $cid = Co::getUid();
             array_push($this->waitList[$classKey],$cid);
-            Co::suspend($cid);//挂起携程。等待恢复
+            Co::suspend();//挂起携程。等待恢复
             /*
              * 携程恢复后，需要再次判断。因为recycleController用户可能抛出异常
              */
