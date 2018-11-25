@@ -87,6 +87,9 @@ class Dispatcher
                         if(is_callable($func)){
                             try{
                                 call_user_func_array($func,array_merge([$request,$response],array_values($vars)));
+                                if ($response->isEndResponse()) {
+                                    return;
+                                }
                             }catch (\Throwable $throwable){
                                 $this->hookThrowable($throwable,$request,$response);
                                 //出现异常的时候，不在往下dispatch
