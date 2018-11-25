@@ -202,7 +202,7 @@ class Dispatcher
         }
     }
 
-    protected function getController(string $class):?Controller
+    protected function getController(string $class)
     {
         $classKey = $this->generateClassKey($class);
         if(!isset($this->$classKey)){
