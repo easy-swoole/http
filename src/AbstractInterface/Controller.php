@@ -78,7 +78,6 @@ abstract class Controller
 
     protected function afterAction(?string $actionName):void
     {
-
     }
 
     protected function onException(\Throwable $throwable):void
@@ -113,14 +112,18 @@ abstract class Controller
             //若没有重构onException，直接抛出给上层
             $this->onException($throwable);
         }finally{
-            $this->afterAction($actionName);
+            try{
+                $this->afterAction($actionName); 
+            }catch (\Throwable $throwable){
+                $this->onException($throwable);
+            }finally{
+                try{
+                    $this->gc();
+                }catch (\Throwable $throwable){
+                    $this->onException($throwable);
+                }
+            }
         }
-        try{
-            $this->gc();
-        }catch (\Throwable $throwable){
-            $this->onException($throwable);
-        }
-
     }
 
     protected function request():Request
