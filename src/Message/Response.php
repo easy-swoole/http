@@ -8,9 +8,6 @@
 
 namespace EasySwoole\Http\Message;
 
-
-use EasySwoole\Curl\Cookie;
-
 class Response extends Message
 {
     private $statusCode = 200;
@@ -44,7 +41,7 @@ class Response extends Message
         return $this->reasonPhrase;
     }
 
-    function withAddedCookie(Cookie $cookie){
+    function withAddedCookie(array $cookie){
         $this->cookies[] = $cookie;
         return $this;
     }

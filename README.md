@@ -42,7 +42,7 @@ class Index extends Controller
         $this->response()->write('hello world');
     }
 
-    function actionNotFound($action): void
+    function actionNotFound(?string $action): void
     {
         $this->response()->write("{$action} not found");
     }

@@ -8,7 +8,6 @@
 
 namespace EasySwoole\Http;
 
-use EasySwoole\Curl\Cookie;
 use EasySwoole\Http\Message\Response as MessageResponse;
 use EasySwoole\Http\Message\Status;
 
@@ -21,8 +20,8 @@ class Response extends MessageResponse
     const STATUS_RESPONSE_DETACH = 3;
 
     private $sendFile = null;
-
     private $isEndResponse = self::STATUS_NOT_END;//1 逻辑end  2真实end 3分离响应
+    private $isChunk = false;
 
     final public function __construct(\swoole_http_response $response)
     {
@@ -31,11 +30,11 @@ class Response extends MessageResponse
         $this->withAddedHeader('Server','EasySwoole');
     }
 
-    function end($status = self::STATUS_LOGICAL_END){
-        $this->isEndResponse = self::STATUS_LOGICAL_END;
+    function end($status = self::STATUS_LOGICAL_END,?string $endString = null){
+        $this->isEndResponse = $status;
         //发送文件的时候，底层自动end,不需要手动end
         if($status == self::STATUS_REAL_END && (!$this->sendFile)){
-            $this->response->end();
+            $this->response->end($endString);
         }
     }
 
@@ -53,17 +52,18 @@ class Response extends MessageResponse
             }
             $cookies = $this->getCookies();
             foreach ($cookies as $cookie){
-                $this->response->cookie($cookie->getName(),$cookie->getValue(),$cookie->getExpire(),$cookie->getPath(),$cookie->getDomain(),$cookie->isSecure(),$cookie->isHttpOnly());
+                $this->response->cookie(...$cookie);
             }
             $write = $this->getBody()->__toString();
-            if($write !== ''){
+            if($write !== '' && $this->isChunk){
                 $this->response->write($write);
+                $write = null;
             }
 
             if($this->sendFile != null){
                 $this->response->sendfile($this->sendFile);
             }
-            $this->end(self::STATUS_REAL_END);
+            $this->end(self::STATUS_REAL_END,$write);
             return true;
         }else{
             return false;
@@ -101,15 +101,7 @@ class Response extends MessageResponse
      */
     public function setCookie($name, $value = null, $expire = null, $path = '/', $domain = '', $secure = false, $httponly = false){
         if(!$this->isEndResponse()){
-            $cookie = new Cookie();
-            $cookie->setName($name);
-            $cookie->setValue($value);
-            $cookie->setExpire($expire);
-            $cookie->setPath($path);
-            $cookie->setDomain($domain);
-            $cookie->setSecure($secure);
-            $cookie->setHttponly($httponly);
-            $this->withAddedCookie($cookie);
+            $this->withAddedCookie(func_get_args());
             return true;
         }else{
             return false;
@@ -134,6 +126,14 @@ class Response extends MessageResponse
         $this->isEndResponse = self::STATUS_RESPONSE_DETACH;
         $this->response->detach();
         return $fd;
+    }
+
+    /**
+     * @param bool $isChunk
+     */
+    public function setIsChunk(bool $isChunk): void
+    {
+        $this->isChunk = $isChunk;
     }
 
     static function createFromFd(int $fd):Response
