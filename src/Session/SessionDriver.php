@@ -9,10 +9,11 @@
 namespace EasySwoole\Http\Session;
 
 
+use EasySwoole\Http\AbstractInterface\SessionDriverInterface;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 
-class Session
+class SessionDriver implements SessionDriverInterface
 {
     private $handler = null;
     private $request;
@@ -34,42 +35,42 @@ class Session
         }
     }
 
-    function savePath(string $path = null)
+    function savePath(string $path = null):?string
     {
         if($path){
             if(!$this->isStart){
                 $this->savePath = rtrim($path,'/');
-                return true;
+                return $this->savePath;
             }else{
-                return false;
+                return null;
             }
         }else{
             return $this->savePath;
         }
     }
 
-    function sid(string $sid = null)
+    function sid(string $sid = null):?string
     {
         if($sid){
             if(!$this->sid){
                 $this->sid = $sid;
-                return true;
+                return $sid;
             }else{
-                return false;
+                return null;
             }
         }else{
             return $this->sid;
         }
     }
 
-    function name(string $sessionName = null)
+    function name(string $sessionName = null):?string
     {
         if($sessionName){
             if(!$this->isStart){
                 $this->sessionName = $sessionName;
-                return true;
+                return $sessionName;
             }else{
-                return false;
+                return null;
             }
         }else{
             return $this->sessionName;
@@ -89,7 +90,7 @@ class Session
         }
     }
 
-    function exist($key)
+    function exist($key):bool
     {
         if($this->isStart){
             return isset($this->data[$key]);
@@ -111,7 +112,7 @@ class Session
      * 但是不会重置当前会话所关联的全局变量， 也不会重置会话 cookie。 如果需要再次使用会话变量，
      *  必须重新调用 session_start() 函数。
      */
-    function destroy()
+    function destroy():bool
     {
         if($this->isStart){
             $this->data = [];
@@ -122,7 +123,7 @@ class Session
         }
     }
 
-    function writeClose()
+    function writeClose():bool
     {
         if($this->isStart){
             $this->isStart = false;
@@ -131,7 +132,9 @@ class Session
             }
             $this->handler->close();
             $this->resetStatus();
+            return true;
         }
+        return false;
     }
 
     function start():bool
@@ -163,9 +166,10 @@ class Session
         $this->writeClose();
     }
 
-    function gc($maxLifeTime)
+    function gc($maxLifeTime):bool
     {
         $this->handler->gc($maxLifeTime);
+        return true;
     }
 
     private function generateSid():string
