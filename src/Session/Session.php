@@ -158,6 +158,16 @@ class Session
         return true;
     }
 
+    function __destruct()
+    {
+        $this->writeClose();
+    }
+
+    function gc($maxLifeTime)
+    {
+        $this->handler->gc($maxLifeTime);
+    }
+
     private function generateSid():string
     {
         $sid = $this->request->getCookieParams($this->sessionName);
@@ -175,11 +185,6 @@ class Session
             $this->response->setCookie($this->sessionName,$sid);
             return $sid;
         }
-    }
-
-    function __destruct()
-    {
-        $this->writeClose();
     }
 
     private function resetStatus()
