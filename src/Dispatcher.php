@@ -71,6 +71,8 @@ class Dispatcher
                 }
             }catch (\Throwable $throwable){
                 throw new RouterError($throwable->getMessage());
+            }finally{
+                $this->router = false;
             }
         }
         $path = UrlParser::pathInfo($request->getUri()->getPath());
