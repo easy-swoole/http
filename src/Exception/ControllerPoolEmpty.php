@@ -6,7 +6,7 @@
  * Time: 上午10:16
  */
 
-namespace EasySwoole\Http\Exceptions;
+namespace EasySwoole\Http\Exception;
 
 
 class ControllerPoolEmpty extends \Exception

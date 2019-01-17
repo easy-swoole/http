@@ -11,7 +11,8 @@ namespace EasySwoole\Http;
 
 use EasySwoole\Http\AbstractInterface\AbstractRouter;
 use EasySwoole\Http\AbstractInterface\Controller;
-use EasySwoole\Http\Exceptions\ControllerPoolEmpty;
+use EasySwoole\Http\Exception\ControllerPoolEmpty;
+use EasySwoole\Http\Exception\RouterError;
 use EasySwoole\Http\Message\Status;
 use Swoole\Coroutine as Co;
 use FastRoute\Dispatcher\GroupCountBased;
@@ -25,7 +26,7 @@ class Dispatcher
     private $maxPoolNum;
     private $controllerPoolCreateNum = [];
     private $httpExceptionHandler = null;
-    private $controllerPoolWaitTime = 5;
+    private $controllerPoolWaitTime = 5.0;
 
     /*
      * 默认每个进程15个控制器，若每个控制器一个持久连接，那么8 worker  就是120连接了
@@ -35,26 +36,12 @@ class Dispatcher
         $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
         $this->maxPoolNum = $maxPoolNum;
         $this->maxDepth = $maxDepth;
-        $class = $this->controllerNameSpacePrefix.'\\Router';
-        try{
-            if(class_exists($class)){
-                $ref = new \ReflectionClass($class);
-                if($ref->isSubclassOf(AbstractRouter::class)){
-                    $this->routerRegister =  $ref->newInstance();
-                    $this->router = new GroupCountBased($this->routerRegister->getRouteCollector()->getData());
-                }else{
-                    throw new \Exception("class : {$class} not AbstractRouter class");
-                }
-            }
-        }catch (\Throwable $throwable){
-            throw new \Exception($throwable->getMessage());
-        }
     }
 
     /**
-     * @param int $controllerPoolWaitTime
+     * @param float $controllerPoolWaitTime
      */
-    public function setControllerPoolWaitTime(int $controllerPoolWaitTime): void
+    public function setControllerPoolWaitTime(float $controllerPoolWaitTime): void
     {
         $this->controllerPoolWaitTime = $controllerPoolWaitTime;
     }
@@ -67,6 +54,25 @@ class Dispatcher
 
     public function dispatch(Request $request,Response $response):void
     {
+        /*
+         * 进行一次初始化判定
+         */
+        if($this->router === null){
+            $class = $this->controllerNameSpacePrefix.'\\Router';
+            try{
+                if(class_exists($class)){
+                    $ref = new \ReflectionClass($class);
+                    if($ref->isSubclassOf(AbstractRouter::class)){
+                        $this->routerRegister =  $ref->newInstance();
+                        $this->router = new GroupCountBased($this->routerRegister->getRouteCollector()->getData());
+                    }else{
+                        throw new RouterError("class : {$class} not AbstractRouter class");
+                    }
+                }
+            }catch (\Throwable $throwable){
+                throw new RouterError($throwable->getMessage());
+            }
+        }
         $path = UrlParser::pathInfo($request->getUri()->getPath());
         if($this->router instanceof GroupCountBased){
             $handler = null;
