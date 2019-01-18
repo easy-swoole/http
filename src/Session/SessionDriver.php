@@ -86,6 +86,7 @@ class SessionDriver implements SessionDriverInterface
             $this->data[$key] = $val;
             return true;
         }else{
+            trigger_error('session is close now,please start session');
             return false;
         }
     }
@@ -95,6 +96,7 @@ class SessionDriver implements SessionDriverInterface
         if($this->isStart){
             return isset($this->data[$key]);
         }else{
+            trigger_error('session is close now,please start session');
             return false;
         }
     }
@@ -104,6 +106,7 @@ class SessionDriver implements SessionDriverInterface
         if(isset($this->data[$key])){
             return $this->data[$key];
         }else{
+            trigger_error('session is close now,please start session');
             return null;
         }
     }
