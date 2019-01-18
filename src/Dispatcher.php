@@ -66,13 +66,15 @@ class Dispatcher
                         $this->routerRegister =  $ref->newInstance();
                         $this->router = new GroupCountBased($this->routerRegister->getRouteCollector()->getData());
                     }else{
+                        $this->router = false;
                         throw new RouterError("class : {$class} not AbstractRouter class");
                     }
+                }else{
+                    $this->router = false;
                 }
             }catch (\Throwable $throwable){
-                throw new RouterError($throwable->getMessage());
-            }finally{
                 $this->router = false;
+                throw new RouterError($throwable->getMessage());
             }
         }
         $path = UrlParser::pathInfo($request->getUri()->getPath());
