@@ -109,6 +109,8 @@ class Dispatcher
             if(is_callable($handler)){
                 try{
                     call_user_func($handler,$request,$response);
+                    //可能在回调中重写了URL PATH
+                    $path = UrlParser::pathInfo($request->getUri()->getPath());
                 }catch (\Throwable $throwable){
                     $this->hookThrowable($throwable,$request,$response);
                     //出现异常的时候，不在往下dispatch
@@ -174,7 +176,12 @@ class Dispatcher
             }
             if($c instanceof Controller){
                 try{
-                    $c->__hook($actionName,$request,$response);
+                    $path = $c->__hook($actionName,$request,$response);
+                    if($path){
+                        $path = UrlParser::pathInfo($path);
+                        $request->getUri()->withPath($path);
+                        $this->dispatch($request,$response);
+                    }
                 }catch (\Throwable $throwable){
                     $this->hookThrowable($throwable,$request,$response);
                 }finally {

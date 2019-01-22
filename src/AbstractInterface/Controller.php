@@ -94,17 +94,18 @@ abstract class Controller
         return $this->actionName;
     }
 
-    public function __hook(?string $actionName, Request $request, Response $response): void
+    public function __hook(?string $actionName, Request $request, Response $response):? string
     {
+        $forwardPath = null;
         $this->request = $request;
         $this->response = $response;
         $this->actionName = $actionName;
         try {
             if ($this->onRequest($actionName) !== false) {
                 if (in_array($actionName, $this->allowMethods)) {
-                    $this->$actionName();
+                    $forwardPath = $this->$actionName();
                 } else {
-                    $this->actionNotFound($actionName);
+                    $forwardPath = $this->actionNotFound($actionName);
                 }
             }
         } catch (\Throwable $throwable) {
@@ -123,6 +124,10 @@ abstract class Controller
                 }
             }
         }
+        if(is_string($forwardPath)){
+            return $forwardPath;
+        }
+        return null;
     }
 
     protected function request(): Request
