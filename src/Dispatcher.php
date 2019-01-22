@@ -92,28 +92,11 @@ class Dispatcher
                         break;
                     }
                     case \FastRoute\Dispatcher::FOUND:{
-                        $func = $routeInfo[1];
+                        $handler = $routeInfo[1];
+                        //合并解析出来的数据
                         $vars = $routeInfo[2];
-                        if(is_callable($func)){
-                            try{
-                                call_user_func_array($func,array_merge([$request,$response],array_values($vars)));
-                                if ($response->isEndResponse()) {
-                                    return;
-                                }
-                            }catch (\Throwable $throwable){
-                                $this->hookThrowable($throwable,$request,$response);
-                                //出现异常的时候，不在往下dispatch
-                                return;
-                            }
-                        }else if(is_string($func)){
-                            $path = $func;
-                            $data = $request->getQueryParams();
-                            $request->withQueryParams($vars+$data);
-                            $pathInfo = UrlParser::pathInfo($func);
-                            $request->getUri()->withPath($pathInfo);
-                        }
-                        //命中路由的时候，直接跳转到分发逻辑
-                        goto dispatch;
+                        $data = $request->getQueryParams();
+                        $request->withQueryParams($vars+$data);
                         break;
                     }
                     default:{
@@ -131,6 +114,9 @@ class Dispatcher
                     //出现异常的时候，不在往下dispatch
                     return;
                 }
+            }else if(is_string($handler)){
+                $path = UrlParser::pathInfo($handler);
+                $request->getUri()->withPath($path);
             }
             /*
                 * 全局模式的时候，都拦截。非全局模式，否则继续往下
@@ -139,15 +125,12 @@ class Dispatcher
                 return;
             }
         }
-
         //如果路由中结束了响应，则不再往下
         if($response->isEndResponse()){
             return;
         }
 
-        dispatch :{
-            $this->controllerHandler($request,$response,$path);
-        };
+        $this->controllerHandler($request,$response,$path);
     }
 
     private function controllerHandler(Request $request,Response $response,string $path)
