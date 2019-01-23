@@ -103,8 +103,12 @@ class SessionDriver implements SessionDriverInterface
 
     function get($key)
     {
-        if(isset($this->data[$key])){
-            return $this->data[$key];
+        if($this->isStart){
+            if(isset($this->data[$key])){
+                return $this->data[$key];
+            }else{
+                return null;
+            }
         }else{
             trigger_error('session is close now,please start session');
             return null;
