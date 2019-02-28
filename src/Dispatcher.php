@@ -185,7 +185,7 @@ class Dispatcher
             if($c instanceof Controller){
                 try{
                     $path = $c->__hook($actionName,$request,$response);
-                    if($path){
+                    if(is_string($path)){
                         $path = UrlParser::pathInfo($path);
                         $request->getUri()->withPath($path);
                         $this->dispatch($request,$response);

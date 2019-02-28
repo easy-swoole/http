@@ -70,7 +70,7 @@ abstract class Controller
         }
     }
 
-    protected function actionNotFound(?string $action): void
+    protected function actionNotFound(?string $action)
     {
         $this->response()->withStatus(Status::CODE_NOT_FOUND);
     }
@@ -124,10 +124,7 @@ abstract class Controller
                 }
             }
         }
-        if(is_string($forwardPath)){
-            return $forwardPath;
-        }
-        return null;
+        return $forwardPath;
     }
 
     protected function request(): Request
