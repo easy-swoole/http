@@ -124,7 +124,7 @@ abstract class Controller
                 }
             }
         }
-        return $forwardPath;
+        return is_string($forwardPath) ? $forwardPath : null;
     }
 
     protected function request(): Request
