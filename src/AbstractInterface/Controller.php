@@ -94,7 +94,7 @@ abstract class Controller
         return $this->actionName;
     }
 
-    public function __hook(?string $actionName, Request $request, Response $response):? string
+    public function __hook(?string $actionName, Request $request, Response $response)
     {
         $forwardPath = null;
         $this->request = $request;
