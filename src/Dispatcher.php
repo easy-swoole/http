@@ -28,10 +28,7 @@ class Dispatcher
     private $httpExceptionHandler = null;
     private $controllerPoolWaitTime = 5.0;
 
-    /*
-     * 默认每个进程15个控制器，若每个控制器一个持久连接，那么8 worker  就是120连接了
-     */
-    function __construct(string $controllerNameSpace,int $maxDepth = 5,int $maxPoolNum = 15)
+    function __construct(string $controllerNameSpace,int $maxDepth = 5,int $maxPoolNum = 200)
     {
         $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
         $this->maxPoolNum = $maxPoolNum;
@@ -112,6 +109,8 @@ class Dispatcher
                     $ret = call_user_func($handler,$request,$response);
                     if(is_string($ret)){
                         $path = UrlParser::pathInfo($ret);
+                    }else if($ret == false){
+                        return;
                     }else{
                         //可能在回调中重写了URL PATH
                         $path = UrlParser::pathInfo($request->getUri()->getPath());
@@ -133,10 +132,6 @@ class Dispatcher
             if($this->routerRegister->isGlobalMode()){
                 return;
             }
-        }
-        //如果路由中结束了响应，则不再往下
-        if($response->isEndResponse()){
-            return;
         }
         response:{
             $this->controllerHandler($request,$response,$path);
