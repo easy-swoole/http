@@ -9,7 +9,9 @@
 namespace EasySwoole\Http\Message;
 
 
-class Uri
+use Psr\Http\Message\UriInterface;
+
+class Uri implements UriInterface
 {
     private $host;
     private $userInfo;
