@@ -162,9 +162,7 @@ class SessionDriver implements SessionDriverInterface
                 return false;
             } else {
                 //开启成功 如果当前没有设置SID则预生成;
-                if (empty($this->sid)) {
-                    $this->sid = $this->generateSid();
-                }
+                $this->sid = $this->generateSid();
                 //载入数据,实现原则中，start后则对Session文件加锁
                 $data = $this->handler->read($this->sid);
                 if (!empty($data)) {
