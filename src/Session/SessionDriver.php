@@ -53,17 +53,18 @@ class SessionDriver implements SessionDriverInterface
         }
     }
 
-    function sid(string $sid = null): ?string
+    function sid(?string $sid = null): ?string
     {
-        if ($sid) {
-            if (!$this->sid) {
+        if ($sid && $this->isStart) {  // 启动后不允许设置SID
+            trigger_error('Session has started so cannot reset sid');
+            return null;
+        } else {  // 在启动前允许任意进行设置
+            if ($sid) {
                 $this->sid = $sid;
                 return $sid;
             } else {
-                return null;
+                return $this->sid;
             }
-        } else {
-            return $this->sid;
         }
     }
 
@@ -149,10 +150,10 @@ class SessionDriver implements SessionDriverInterface
         return false;
     }
 
-    function start(string $sid = ''): bool
+    function start(?string $sid = null): bool
     {
-        if ($sid != '') {
-            $this->sid = $sid;
+        if ($sid) { // 如果指定了SID 进行预设
+            $this->sid($sid);
         }
         if (!$this->isStart) {
             $this->isStart = $this->handler->open($this->savePath, $this->sessionName);
@@ -160,8 +161,10 @@ class SessionDriver implements SessionDriverInterface
                 trigger_error("session open {$this->savePath}@{$this->sessionName} fail");
                 return false;
             } else {
-                //开启成功，则准备sid;
-                $this->sid = $this->generateSid();
+                //开启成功 如果当前没有设置SID则预生成;
+                if (empty($this->sid)) {
+                    $this->sid = $this->generateSid();
+                }
                 //载入数据,实现原则中，start后则对Session文件加锁
                 $data = $this->handler->read($this->sid);
                 if (!empty($data)) {
