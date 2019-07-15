@@ -18,7 +18,8 @@
         "easyswoole/component": "^1.0",
         "easyswoole/validate": "^1.1",
         "nikic/fast-route": "^1.3",
-        "psr/http-message": "*"
+        "psr/http-message": "*",
+        "easyswoole/annotation": "^1.0"
     },
     "autoload": {
         "psr-4": {

@@ -71,3 +71,47 @@ $http->on("request", function ($request, $response)use($service) {
 $http->start();
 ```
 
+
+## test
+```
+class A extends \EasySwoole\Http\AbstractInterface\AnnotationController{
+
+    /**
+     * @method(allow=get,post)
+     * @param(name=test,required=不能为空,default=2)
+     * @param(name=test,required,maxLen=12,minLen=3,type=get)
+     * @param(name=token,required,type=cookie)
+     * @timeout(max=1.3)
+     */
+    function index()
+    {
+
+    }
+
+    /**
+     * @param(name=test,required=不能为空,default=2)
+     */
+    function b()
+    {
+
+    }
+
+    /**
+     * @method(allow=get)
+     * @param(name=test,required=不能为空,default=2)
+     */
+    function c()
+    {
+
+    }
+
+    /**
+     * @method(forbid=get)
+     * @param(name=test,required=不能为空,default=2)
+     */
+    function d()
+    {
+
+    }
+}
+```

@@ -20,31 +20,34 @@ abstract class Controller
     private $actionName;
     private $allowMethods = [];
     private $defaultProperties = [];
+    private $allowMethodReflections = [];
 
     function __construct()
     {
+        $forbidList = [
+            '__hook', '__destruct',
+            '__clone', '__construct', '__call',
+            '__callStatic', '__get', '__set',
+            '__isset', '__unset', '__sleep',
+            '__wakeup', '__toString', '__invoke',
+            '__set_state', '__clone', '__debugInfo'
+        ];
+
         //支持在子类控制器中以private，protected来修饰某个方法不可见
         $list = [];
         $ref = new \ReflectionClass(static::class);
         $public = $ref->getMethods(\ReflectionMethod::IS_PUBLIC);
         foreach ($public as $item) {
-            array_push($list, $item->getName());
+            if(!in_array($item->getName(),$forbidList)){
+                array_push($list, $item->getName());
+                $this->allowMethodReflections[$item->getName()] = $item;
+            }
         }
-        $this->allowMethods = array_diff($list,
-            [
-                '__hook', '__destruct',
-                '__clone', '__construct', '__call',
-                '__callStatic', '__get', '__set',
-                '__isset', '__unset', '__sleep',
-                '__wakeup', '__toString', '__invoke',
-                '__set_state', '__clone', '__debugInfo'
-            ]
-        );
         //获取，生成属性默认值
         $ref = new \ReflectionClass(static::class);
         $properties = $ref->getProperties();
         foreach ($properties as $property) {
-            //不重置静态变量
+            //不重置静态变量与私有变量
             if (($property->isPublic() || $property->isProtected()) && !$property->isStatic()) {
                 $name = $property->getName();
                 $this->defaultProperties[$name] = $this->$name;
@@ -53,6 +56,11 @@ abstract class Controller
     }
 
     abstract function index();
+
+    protected function getAllowMethodReflections()
+    {
+        return $this->allowMethodReflections;
+    }
 
     protected function gc()
     {
