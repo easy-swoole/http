@@ -38,7 +38,7 @@ abstract class Controller
         $ref = new \ReflectionClass(static::class);
         $public = $ref->getMethods(\ReflectionMethod::IS_PUBLIC);
         foreach ($public as $item) {
-            if(!in_array($item->getName(),$forbidList)){
+            if((!in_array($item->getName(),$forbidList)) && (!$item->isStatic())){
                 array_push($list, $item->getName());
                 $this->allowMethodReflections[$item->getName()] = $item;
             }
@@ -51,7 +51,7 @@ abstract class Controller
             //不重置静态变量与私有变量
             if (($property->isPublic() || $property->isProtected()) && !$property->isStatic()) {
                 $name = $property->getName();
-                $this->defaultProperties[$name] = $this->$name;
+                $this->defaultProperties[$name] = $this->{$name};
             }
         }
     }
@@ -67,7 +67,7 @@ abstract class Controller
     {
         //恢复默认值
         foreach ($this->defaultProperties as $property => $value) {
-            $this->$property = $value;
+            $this->{$property} = $value;
         }
     }
 

@@ -16,10 +16,10 @@
         "ext-swoole":"^4.0",
         "easyswoole/spl": "^1.0",
         "easyswoole/component": "^1.0",
-        "easyswoole/validate": "^1.1",
+        "easyswoole/validate": "dev-master",
         "nikic/fast-route": "^1.3",
-        "psr/http-message": "*",
-        "easyswoole/annotation": "^1.0"
+        "psr/http-message": "^1.0",
+        "easyswoole/annotation": "dev-master"
     },
     "autoload": {
         "psr-4": {
