@@ -18,7 +18,6 @@ abstract class Controller
     private $request;
     private $response;
     private $actionName;
-    private $allowMethods = [];
     private $defaultProperties = [];
     private $allowMethodReflections = [];
 
@@ -30,7 +29,8 @@ abstract class Controller
             '__callStatic', '__get', '__set',
             '__isset', '__unset', '__sleep',
             '__wakeup', '__toString', '__invoke',
-            '__set_state', '__clone', '__debugInfo'
+            '__set_state', '__clone', '__debugInfo',
+            'onRequest'
         ];
 
         //支持在子类控制器中以private，protected来修饰某个方法不可见
@@ -43,6 +43,7 @@ abstract class Controller
                 $this->allowMethodReflections[$item->getName()] = $item;
             }
         }
+
         //获取，生成属性默认值
         $ref = new \ReflectionClass(static::class);
         $properties = $ref->getProperties();
@@ -102,7 +103,7 @@ abstract class Controller
         $this->actionName = $actionName;
         try {
             if ($this->onRequest($actionName) !== false) {
-                if (in_array($actionName, $this->allowMethods)) {
+                if (array_key_exists($actionName, $this->allowMethodReflections)) {
                     $forwardPath = $this->$actionName();
                 } else {
                     $forwardPath = $this->actionNotFound($actionName);
