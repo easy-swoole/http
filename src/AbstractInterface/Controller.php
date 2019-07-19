@@ -48,8 +48,8 @@ abstract class Controller
         $ref = new \ReflectionClass(static::class);
         $properties = $ref->getProperties();
         foreach ($properties as $property) {
-            //不重置静态变量与私有变量
-            if (($property->isPublic() || $property->isProtected()) && !$property->isStatic()) {
+            //不重置静态变量与保护私有变量
+            if ($property->isPublic() && !$property->isStatic()) {
                 $name = $property->getName();
                 $this->defaultProperties[$name] = $this->{$name};
             }
@@ -95,7 +95,7 @@ abstract class Controller
         return $this->actionName;
     }
 
-    public function __hook(?string $actionName, Request $request, Response $response)
+    public function __hook(?string $actionName, Request $request, Response $response,callable $actionHook = null)
     {
         $forwardPath = null;
         $this->request = $request;
@@ -104,7 +104,11 @@ abstract class Controller
         try {
             if ($this->onRequest($actionName) !== false) {
                 if (array_key_exists($actionName, $this->allowMethodReflections)) {
-                    $forwardPath = $this->$actionName();
+                    if($actionHook){
+                        $forwardPath = call_user_func($actionHook);
+                    }else{
+                        $forwardPath = $this->$actionName();
+                    }
                 } else {
                     $forwardPath = $this->actionNotFound($actionName);
                 }

@@ -24,10 +24,10 @@ abstract class REST extends Controller
        'HEAD',     // 获取 head 元数据
        'OPTIONS',  // 获取信息，关于资源的哪些属性是客户端可以改变的
      */
-    function __hook(?string $actionName, Request $request, Response $response):?string
+    function __hook(?string $actionName, Request $request, Response $response,callable $actionHook = null):?string
     {
         $actionName = $request->getMethod().ucfirst($actionName);
-        return parent::__hook($actionName, $request, $response);
+        return parent::__hook($actionName, $request, $response,$actionHook);
     }
 
     function index()

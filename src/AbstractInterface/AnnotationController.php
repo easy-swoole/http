@@ -9,6 +9,8 @@ use EasySwoole\Annotation\Annotation;
 use EasySwoole\Http\Annotation\Method;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
+use EasySwoole\Validate\Annotations\LengthMax;
+use EasySwoole\Validate\Annotations\Required;
 
 abstract class AnnotationController extends Controller
 {
@@ -18,7 +20,15 @@ abstract class AnnotationController extends Controller
     {
         parent::__construct();
         $annotation = new Annotation();
+        /*
+         * 注册解析命令
+         */
         $annotation->addParserTag(new Method());
+
+        //注册Validate命令
+        $annotation->addParserTag(new Required());
+        $annotation->addParserTag(new LengthMax());
+
         foreach ($this->getAllowMethodReflections() as $name => $reflection){
             $ret = $annotation->getClassMethodAnnotation($reflection);
             if(!empty($ret)){
@@ -29,10 +39,21 @@ abstract class AnnotationController extends Controller
         var_dump($this->methodAnnotations);
     }
 
-    function __hook(?string $actionName, Request $request, Response $response)
+    function __hook(?string $actionName, Request $request, Response $response, callable $actionHook = null)
     {
-        /*
-         * 重写hook
-         */
+        $actionHook = function (){
+            /*
+             * 处理请求方法
+             */
+            /*
+             * validate验证
+             */
+
+            /*
+             * 参数构造
+             */
+            $action = $this->getActionName();
+        };
+        return parent::__hook($actionName, $request, $response, $actionHook);
     }
 }
