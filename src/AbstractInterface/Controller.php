@@ -34,12 +34,10 @@ abstract class Controller
         ];
 
         //支持在子类控制器中以private，protected来修饰某个方法不可见
-        $list = [];
         $ref = new \ReflectionClass(static::class);
         $public = $ref->getMethods(\ReflectionMethod::IS_PUBLIC);
         foreach ($public as $item) {
             if((!in_array($item->getName(),$forbidList)) && (!$item->isStatic())){
-                array_push($list, $item->getName());
                 $this->allowMethodReflections[$item->getName()] = $item;
             }
         }
@@ -103,7 +101,7 @@ abstract class Controller
         $this->actionName = $actionName;
         try {
             if ($this->onRequest($actionName) !== false) {
-                if (array_key_exists($actionName, $this->allowMethodReflections)) {
+                if (isset($this->allowMethodReflections[$actionName])) {
                     if($actionHook){
                         $forwardPath = call_user_func($actionHook);
                     }else{
