@@ -204,8 +204,29 @@ final class Param implements AnnotationTagInterface
 
     public function assetValue(?string $raw)
     {
-        $list = explode(',',$raw);
-        foreach ($list as $item){
+        $allParams = [];
+        $hasQuotation = false;
+        $temp = '';
+        for($i = 0;$i < strlen($raw);$i++){
+            if($raw[$i] == ',' && (!$hasQuotation)){
+                $allParams[] = $temp;
+                $temp = '';
+            }else{
+                $temp = $temp.$raw[$i];
+            }
+            if($raw[$i] == "\""){
+                if($hasQuotation){
+                    $hasQuotation = false;
+                }else{
+                    $hasQuotation = true;
+                }
+            }
+        }
+        if(!empty($temp)){
+            $allParams[] = $temp;
+        }
+
+        foreach ($allParams as $item){
             parse_str($item,$args);
             if(isset($args['name'])){
                 $this->name = trim($args['name']," \t\n\r\0\x0B\"'");
@@ -223,8 +244,45 @@ final class Param implements AnnotationTagInterface
                     $value = trim($args[$key]," \t\n\r\0\x0B\"'");
                     $temp = explode("|",$value);
                     $list = [];
-                    foreach ($temp as $sub){
-                        $list[] = trim($sub," \t\n\r\0\x0B\"'");
+                    foreach ($temp as $subArg){
+                        /*
+                         * [] 数组支持
+                         */
+                        if(substr($subArg,0,1) == '[' && substr($subArg,-1,1) == ']'){
+                            $subArg = trim($subArg,"[]");
+                            $inArray = explode(',',$subArg);
+                            $index = count($list);
+                            if($index <= 0){
+                                $index = 1;
+                            }
+                            foreach ($inArray as $subItem){
+                                /*
+                                 * bool null支持
+                                 */
+                                $value = trim($subItem," \t\n\r\0\x0B\"'");
+                                if($value == 'true'){
+                                    $value = true;
+                                }else if($value == 'false'){
+                                    $value = false;
+                                }else if($value == 'null'){
+                                    $value = null;
+                                }
+                                $list[$index - 1][] = $value;
+                            }
+                        }else{
+                            /*
+                                * bool null支持
+                             */
+                            $value = trim($subArg," \t\n\r\0\x0B\"'");
+                            if($value == 'true'){
+                                $value = true;
+                            }else if($value == 'false'){
+                                $value = false;
+                            }else if($value == 'null'){
+                                $value = null;
+                            }
+                            $list[] = $value;
+                        }
                     }
                     $this->{$key} = $list;
                     $this->validateRuleList[$key] = true;
