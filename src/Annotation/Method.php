@@ -16,7 +16,7 @@ final class Method implements AnnotationTagInterface
     /**
      * @var array
      */
-    protected $allow = [];
+    public $allow = [];
 
     public function tagName(): string
     {
