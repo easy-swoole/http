@@ -18,22 +18,33 @@ use EasySwoole\Validate\Validate;
 abstract class AnnotationController extends Controller
 {
     private $methodAnnotations = [];
+    private $annotation;
 
     public function __construct()
     {
         parent::__construct();
-        $annotation = new Annotation();
+        $this->annotation = new Annotation();
         /*
          * 注册解析命令
          */
-        $annotation->addParserTag(new Method());
-        $annotation->addParserTag(new Param());
+        $this->annotation->addParserTag(new Method());
+        $this->annotation->addParserTag(new Param());
         foreach ($this->getAllowMethodReflections() as $name => $reflection){
-            $ret = $annotation->getClassMethodAnnotation($reflection);
+            $ret = $this->annotation->getClassMethodAnnotation($reflection);
             if(!empty($ret)){
                 $this->methodAnnotations[$name] = $ret;
             }
         }
+    }
+
+    protected function getMethodAnnotations():array
+    {
+        return $this->methodAnnotations;
+    }
+
+    protected function getAnnotation():Annotation
+    {
+        return $this->annotation;
     }
 
     function __hook(?string $actionName, Request $request, Response $response, callable $actionHook = null)
