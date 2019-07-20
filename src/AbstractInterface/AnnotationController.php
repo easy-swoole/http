@@ -7,10 +7,10 @@ namespace EasySwoole\Http\AbstractInterface;
 
 use EasySwoole\Annotation\Annotation;
 use EasySwoole\Http\Annotation\Method;
+use EasySwoole\Http\Annotation\Param;
+use EasySwoole\Http\Annotation\ValidateFail;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
-use EasySwoole\Validate\Annotations\LengthMax;
-use EasySwoole\Validate\Annotations\Required;
 
 abstract class AnnotationController extends Controller
 {
@@ -24,10 +24,9 @@ abstract class AnnotationController extends Controller
          * 注册解析命令
          */
         $annotation->addParserTag(new Method());
+        $annotation->addParserTag(new ValidateFail());
+        $annotation->addParserTag(new Param());
 
-        //注册Validate命令
-        $annotation->addParserTag(new Required());
-        $annotation->addParserTag(new LengthMax());
 
         foreach ($this->getAllowMethodReflections() as $name => $reflection){
             $ret = $annotation->getClassMethodAnnotation($reflection);
