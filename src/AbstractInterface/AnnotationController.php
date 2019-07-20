@@ -6,6 +6,7 @@ namespace EasySwoole\Http\AbstractInterface;
 
 
 use EasySwoole\Annotation\Annotation;
+use EasySwoole\Http\Annotation\Context;
 use EasySwoole\Http\Annotation\Method;
 use EasySwoole\Http\Annotation\Param;
 use EasySwoole\Http\Exception\AnnotationMethodNotAllow;
@@ -29,6 +30,7 @@ abstract class AnnotationController extends Controller
          */
         $this->annotation->addParserTag(new Method());
         $this->annotation->addParserTag(new Param());
+        $this->annotation->addParserTag(new Context());
         foreach ($this->getAllowMethodReflections() as $name => $reflection){
             $ret = $this->annotation->getClassMethodAnnotation($reflection);
             if(!empty($ret)){

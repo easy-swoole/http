@@ -20,6 +20,7 @@ abstract class Controller
     private $actionName;
     private $defaultProperties = [];
     private $allowMethodReflections = [];
+    private $propertyReflections = [];
 
     function __construct()
     {
@@ -50,6 +51,7 @@ abstract class Controller
             if ($property->isPublic() && !$property->isStatic()) {
                 $name = $property->getName();
                 $this->defaultProperties[$name] = $this->{$name};
+                $this->propertyReflections[$name] = $property;
             }
         }
     }
@@ -59,6 +61,11 @@ abstract class Controller
     protected function getAllowMethodReflections()
     {
         return $this->allowMethodReflections;
+    }
+
+    protected function getPropertyReflections():array
+    {
+        return $this->propertyReflections;
     }
 
     protected function gc()
