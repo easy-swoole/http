@@ -116,6 +116,9 @@ abstract class AnnotationController extends Controller
                             throw new ParamAnnotationError("param annotation error for action {$actionName} in class ".(static::class));
                         }
                         if(!empty($param->from)){
+                            /*
+                             * 按照允许的列表顺序进行取值
+                             */
                             foreach ($param->from as $from){
                                 switch ($from){
                                     case "POST":{
