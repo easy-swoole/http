@@ -78,6 +78,16 @@ use EasySwoole\Http\Annotation\Method;
 
 class Test extends \EasySwoole\Http\AbstractInterface\AnnotationController
 {
+    /**
+     * @\EasySwoole\Http\Annotation\Context(key="MYSQL")
+     */
+    public $mysql;
+
+    /**
+     * @var 
+     * @\EasySwoole\Http\Annotation\DI(key="IOC")
+     */
+    public $IOC;
 
     function index()
     {
@@ -88,9 +98,9 @@ class Test extends \EasySwoole\Http\AbstractInterface\AnnotationController
      * @Method(allow={GET,POST})
      * @\EasySwoole\Http\Annotation\Param(name="test",method={POST})
      * @\EasySwoole\Http\Annotation\Param(name="msg",alias="消息字段",lengthMax="20|消息过长",required="消息不能为空")
-     * @\EasySwoole\Http\Annotation\Param(name="type",inArray="[1,2,3,4]|false|type类型错误")
+     * @\EasySwoole\Http\Annotation\Param(name="type",inArray="[1,2,3,4]")
      */
-    function fuck(?string $test,?string $msg)
+    function fuck($test,$msg)
     {
         var_dump($test,$msg);
     }
@@ -116,4 +126,5 @@ $request->withMethod("get");
 $response = new \EasySwoole\Http\Response();
 $test = new Test();
 $test->__hook('fuck',$request,$response);
+
 ```

@@ -8,6 +8,7 @@ namespace EasySwoole\Http\AbstractInterface;
 use EasySwoole\Annotation\Annotation;
 use EasySwoole\Component\Context\ContextManager;
 use EasySwoole\Http\Annotation\Context;
+use EasySwoole\Http\Annotation\Di;
 use EasySwoole\Http\Annotation\Method;
 use EasySwoole\Http\Annotation\Param;
 use EasySwoole\Http\Exception\AnnotationMethodNotAllow;
@@ -16,6 +17,7 @@ use EasySwoole\Http\Exception\ParamAnnotationValidateError;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 use EasySwoole\Validate\Validate;
+use EasySwoole\Component\Di as IOC;
 
 abstract class AnnotationController extends Controller
 {
@@ -37,6 +39,7 @@ abstract class AnnotationController extends Controller
         $this->annotation->addParserTag(new Method());
         $this->annotation->addParserTag(new Param());
         $this->annotation->addParserTag(new Context());
+        $this->annotation->addParserTag(new Di());
         foreach ($this->getAllowMethodReflections() as $name => $reflection){
             $ret = $this->annotation->getClassMethodAnnotation($reflection);
             if(!empty($ret)){
@@ -75,6 +78,15 @@ abstract class AnnotationController extends Controller
                 $context = $propertyAnnotation['Context'][0]->key;
                 if(!empty($context)){
                     $this->{$name} = ContextManager::getInstance()->get($context);
+                }
+            }
+            /*
+             * 判断Di注入
+             */
+            if(!empty($propertyAnnotation['DI'])){
+                $key = $propertyAnnotation['DI'][0]->key;
+                if(!empty($key)){
+                    $this->{$name} = IOC::getInstance()->get($key);
                 }
             }
         }
