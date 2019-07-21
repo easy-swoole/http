@@ -116,6 +116,7 @@ abstract class AnnotationController extends Controller
                             throw new ParamAnnotationError("param annotation error for action {$actionName} in class ".(static::class));
                         }
                         if(!empty($param->from)){
+                            $value = null;
                             /*
                              * 按照允许的列表顺序进行取值
                              */
@@ -131,10 +132,6 @@ abstract class AnnotationController extends Controller
                                     }
                                     case "COOKIE":{
                                         $value = $this->request()->getCookieParams($paramName);
-                                        break;
-                                    }
-                                    default:{
-                                        $value = null;
                                         break;
                                     }
                                 }
