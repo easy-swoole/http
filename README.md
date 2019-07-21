@@ -96,7 +96,7 @@ class Test extends \EasySwoole\Http\AbstractInterface\AnnotationController
 
     /**
      * @Method(allow={GET,POST})
-     * @\EasySwoole\Http\Annotation\Param(name="test",method={POST})
+     * @\EasySwoole\Http\Annotation\Param(name="test",from={POST})
      * @\EasySwoole\Http\Annotation\Param(name="msg",alias="消息字段",lengthMax="20|消息过长",required="消息不能为空")
      * @\EasySwoole\Http\Annotation\Param(name="type",inArray="[1,2,3,4]")
      */

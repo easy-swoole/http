@@ -20,7 +20,7 @@ final class Param implements AnnotationTagInterface
     /**
      * @var array
      */
-    public $method = [];
+    public $from = [];
 
     /**
      * @var string
@@ -234,7 +234,7 @@ final class Param implements AnnotationTagInterface
                 $str = trim($args['method'],"{}");
                 $temp = explode(",",$str);
                 foreach ($temp as $method){
-                    $this->method[] = trim($method," \t\n\r\0\x0B\"'");
+                    $this->from[] = trim($method," \t\n\r\0\x0B\"'");
                 }
             }else if(isset($args['alias'])){
                 $this->alias = trim($args['alias']," \t\n\r\0\x0B\"'");

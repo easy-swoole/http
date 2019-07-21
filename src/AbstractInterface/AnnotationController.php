@@ -115,15 +115,29 @@ abstract class AnnotationController extends Controller
                         if(empty($paramName)){
                             throw new ParamAnnotationError("param annotation error for action {$actionName} in class ".(static::class));
                         }
-                        if(!empty($param->method)){
-                            if(in_array('POST',$param->method)){
-                                $value = $this->request()->getParsedBody($paramName);
-                            }else if(in_array('GET',$param->method)){
-                                $value = $this->request()->getQueryParam($paramName);
-                            }else if(in_array('COOKIE',$param->method)){
-                                $value = $this->request()->getCookieParams($paramName);
-                            }else{
-                                $value = $this->request()->getRequestParam($paramName);
+                        if(!empty($param->from)){
+                            foreach ($param->from as $from){
+                                switch ($from){
+                                    case "POST":{
+                                        $value = $this->request()->getParsedBody($paramName);
+                                        break;
+                                    }
+                                    case "GET":{
+                                        $value = $this->request()->getQueryParam($paramName);
+                                        break;
+                                    }
+                                    case "COOKIE":{
+                                        $value = $this->request()->getCookieParams($paramName);
+                                        break;
+                                    }
+                                    default:{
+                                        $value = null;
+                                        break;
+                                    }
+                                }
+                                if($value !== null){
+                                    break;
+                                }
                             }
                         }else{
                             $value = $this->request()->getRequestParam($paramName);
