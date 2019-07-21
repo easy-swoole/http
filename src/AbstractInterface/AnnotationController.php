@@ -120,6 +120,8 @@ abstract class AnnotationController extends Controller
                                 $value = $this->request()->getParsedBody($paramName);
                             }else if(in_array('GET',$param->method)){
                                 $value = $this->request()->getQueryParam($paramName);
+                            }else if(in_array('COOKIE',$param->method)){
+                                $value = $this->request()->getCookieParams($paramName);
                             }else{
                                 $value = $this->request()->getRequestParam($paramName);
                             }
