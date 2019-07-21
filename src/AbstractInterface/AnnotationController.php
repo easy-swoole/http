@@ -23,10 +23,14 @@ abstract class AnnotationController extends Controller
     private $propertyAnnotations = [];
     private $annotation;
 
-    public function __construct()
+    public function __construct(?Annotation $annotation = null)
     {
         parent::__construct();
-        $this->annotation = new Annotation();
+        if($annotation == null){
+            $this->annotation = new Annotation();
+        }else{
+            $this->annotation = $annotation;
+        }
         /*
          * 注册解析命令
          */
