@@ -32,7 +32,6 @@ final class Context implements AnnotationTagInterface
         parse_str($raw,$str);
         if(!empty($str['key'])){
             $this->key = trim($str['key']," \t\n\r\0\x0B\"'");
-            var_dump($this->key);
         }
     }
 }

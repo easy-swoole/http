@@ -6,6 +6,7 @@ namespace EasySwoole\Http\AbstractInterface;
 
 
 use EasySwoole\Annotation\Annotation;
+use EasySwoole\Component\Context\ContextManager;
 use EasySwoole\Http\Annotation\Context;
 use EasySwoole\Http\Annotation\Method;
 use EasySwoole\Http\Annotation\Param;
@@ -19,6 +20,7 @@ use EasySwoole\Validate\Validate;
 abstract class AnnotationController extends Controller
 {
     private $methodAnnotations = [];
+    private $propertyAnnotations = [];
     private $annotation;
 
     public function __construct()
@@ -37,6 +39,12 @@ abstract class AnnotationController extends Controller
                 $this->methodAnnotations[$name] = $ret;
             }
         }
+        foreach ($this->getPropertyReflections() as $name => $reflection){
+            $ret = $this->annotation->getPropertyAnnotation($reflection);
+            if(!empty($ret)){
+                $this->propertyAnnotations[$name] = $ret;
+            }
+        }
     }
 
     protected function getMethodAnnotations():array
@@ -51,6 +59,22 @@ abstract class AnnotationController extends Controller
 
     function __hook(?string $actionName, Request $request, Response $response, callable $actionHook = null)
     {
+        /*
+         * 扫码全部public属性的注解
+         */
+
+        foreach ($this->propertyAnnotations as $name => $propertyAnnotation){
+            /*
+             * 判断上下文注解
+             */
+            if(!empty($propertyAnnotation['Context'])){
+                $context = $propertyAnnotation['Context'][0]->key;
+                if(!empty($context)){
+                    $this->{$name} = ContextManager::getInstance()->get($context);
+                }
+            }
+        }
+
         $actionHook = function ()use($actionName){
             if(isset($this->methodAnnotations[$actionName])){
                 $annotations = $this->methodAnnotations[$actionName];
