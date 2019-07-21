@@ -256,32 +256,10 @@ final class Param implements AnnotationTagInterface
                                 $index = 1;
                             }
                             foreach ($inArray as $subItem){
-                                /*
-                                 * bool null支持
-                                 */
-                                $value = trim($subItem," \t\n\r\0\x0B\"'");
-                                if($value == 'true'){
-                                    $value = true;
-                                }else if($value == 'false'){
-                                    $value = false;
-                                }else if($value == 'null'){
-                                    $value = null;
-                                }
-                                $list[$index - 1][] = $value;
+                                $list[$index - 1][] = $this->valueConvert($subItem);
                             }
                         }else{
-                            /*
-                                * bool null支持
-                             */
-                            $value = trim($subArg," \t\n\r\0\x0B\"'");
-                            if($value == 'true'){
-                                $value = true;
-                            }else if($value == 'false'){
-                                $value = false;
-                            }else if($value == 'null'){
-                                $value = null;
-                            }
-                            $list[] = $value;
+                            $list[] = $this->valueConvert($subArg);
                         }
                     }
                     $this->{$key} = $list;
@@ -289,5 +267,18 @@ final class Param implements AnnotationTagInterface
                 }
             }
         }
+    }
+
+    private function valueConvert($value)
+    {
+        $value = trim($value," \t\n\r\0\x0B\"'");
+        if($value == 'true'){
+            $value = true;
+        }else if($value == 'false'){
+            $value = false;
+        }else if($value == 'null'){
+            $value = null;
+        }
+        return $value;
     }
 }
