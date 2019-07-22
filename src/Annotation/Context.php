@@ -3,14 +3,14 @@
 
 namespace EasySwoole\Http\Annotation;
 
-use EasySwoole\Annotation\AnnotationTagInterface;
+use EasySwoole\Annotation\AbstractAnnotationTag;
 
 /**
  * Class Context
  * @package EasySwoole\Http\Annotation
  * @Annotation
  */
-final class Context implements AnnotationTagInterface
+final class Context extends AbstractAnnotationTag
 {
     /**
      * @var string

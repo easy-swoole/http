@@ -4,14 +4,14 @@
 namespace EasySwoole\Http\Annotation;
 
 
-use EasySwoole\Annotation\AnnotationTagInterface;
+use EasySwoole\Annotation\AbstractAnnotationTag;
 
 /**
  * Class Method
  * @package EasySwoole\Http\Annotation
  * @Annotation
  */
-final class Method implements AnnotationTagInterface
+final class Method extends AbstractAnnotationTag
 {
     /**
      * @var array
@@ -21,11 +21,6 @@ final class Method implements AnnotationTagInterface
     public function tagName(): string
     {
         return 'Method';
-    }
-
-    public function aliasMap(): array
-    {
-        return [static::class];
     }
 
     public function assetValue(?string $raw)

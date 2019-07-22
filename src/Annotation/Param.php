@@ -3,14 +3,15 @@
 
 namespace EasySwoole\Http\Annotation;
 
-use EasySwoole\Annotation\AnnotationTagInterface;
+use EasySwoole\Annotation\AbstractAnnotationTag;
+use EasySwoole\Annotation\ValueParser;
 
 /**
  * Class Param
  * @package EasySwoole\Http\Annotation
  * @Annotation
  */
-final class Param implements AnnotationTagInterface
+final class Param extends AbstractAnnotationTag
 {
     /**
      * @var string
@@ -204,81 +205,37 @@ final class Param implements AnnotationTagInterface
 
     public function assetValue(?string $raw)
     {
-        $allParams = [];
-        $hasQuotation = false;
-        $temp = '';
-        for($i = 0;$i < strlen($raw);$i++){
-            if($raw[$i] == ',' && (!$hasQuotation)){
-                $allParams[] = $temp;
-                $temp = '';
-            }else{
-                $temp = $temp.$raw[$i];
-            }
-            if($raw[$i] == "\""){
-                if($hasQuotation){
-                    $hasQuotation = false;
-                }else{
-                    $hasQuotation = true;
+        $allParams = ValueParser::parser($raw);
+        foreach ($allParams as $key => $param){
+            switch ($key){
+                case 'name':{
+                    $this->name = (string)$param;
+                    break;
                 }
-            }
-        }
-        if(!empty($temp)){
-            $allParams[] = $temp;
-        }
-
-        foreach ($allParams as $item){
-            parse_str($item,$args);
-            if(isset($args['name'])){
-                $this->name = trim($args['name']," \t\n\r\0\x0B\"'");
-            }else if(isset($args['method'])){
-                $str = trim($args['method'],"{}");
-                $temp = explode(",",$str);
-                foreach ($temp as $method){
-                    $this->from[] = trim($method," \t\n\r\0\x0B\"'");
+                case 'from':{
+                    $this->from = (array)$param;
+                    break;
                 }
-            }else if(isset($args['alias'])){
-                $this->alias = trim($args['alias']," \t\n\r\0\x0B\"'");
-            }else{
-                $key = array_keys($args)[0];
-                if(in_array($key,$this->allowValidateRule)){
-                    $value = trim($args[$key]," \t\n\r\0\x0B\"'");
-                    $temp = explode("|",$value);
-                    $list = [];
-                    foreach ($temp as $subArg){
+                case 'alias':{
+                    $this->alias = (string)$param;
+                }
+                default :{
+                    if(in_array($key,$this->allowValidateRule))
+                    {
                         /*
-                         * [] 数组支持
+                         * 对inarray 做特殊处理
                          */
-                        if(substr($subArg,0,1) == '[' && substr($subArg,-1,1) == ']'){
-                            $subArg = trim($subArg,"[]");
-                            $inArray = explode(',',$subArg);
-                            $index = count($list);
-                            if($index <= 0){
-                                $index = 1;
+                        if(in_array($key,['inArray','notInArray'])){
+                            if(!is_array($param[0])){
+                                $param = [$param];
                             }
-                            foreach ($inArray as $subItem){
-                                $list[$index - 1][] = $this->valueConvert($subItem);
-                            }
-                        }else{
-                            $list[] = $this->valueConvert($subArg);
                         }
+                        $this->$key = $param;
+                        $this->validateRuleList[$key] = true;
                     }
-                    $this->{$key} = $list;
-                    $this->validateRuleList[$key] = true;
+                    break;
                 }
             }
         }
-    }
-
-    private function valueConvert($value)
-    {
-        $value = trim($value," \t\n\r\0\x0B\"'");
-        if($value == 'true'){
-            $value = true;
-        }else if($value == 'false'){
-            $value = false;
-        }else if($value == 'null'){
-            $value = null;
-        }
-        return $value;
     }
 }

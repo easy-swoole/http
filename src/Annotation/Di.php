@@ -4,14 +4,14 @@
 namespace EasySwoole\Http\Annotation;
 
 
-use EasySwoole\Annotation\AnnotationTagInterface;
+use EasySwoole\Annotation\AbstractAnnotationTag;
 
 /**
  * Class Di
  * @package EasySwoole\Http\Annotation
  * @Annotation
  */
-final class DI implements AnnotationTagInterface
+final class DI extends AbstractAnnotationTag
 {
 
     /**

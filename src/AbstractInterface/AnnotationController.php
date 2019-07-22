@@ -149,6 +149,9 @@ abstract class AnnotationController extends Controller
                         if(!empty($param->validateRuleList)){
                             foreach ($param->validateRuleList as $rule => $none){
                                 $validateArgs = $param->{$rule};
+                                if(!is_array($validateArgs)){
+                                    $validateArgs = [$validateArgs];
+                                }
                                 $validate->addColumn($param->name,$param->alias)->{$rule}(...$validateArgs);
                             }
                         }
