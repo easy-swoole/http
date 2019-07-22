@@ -84,7 +84,7 @@ class Test extends \EasySwoole\Http\AbstractInterface\AnnotationController
     public $mysql;
 
     /**
-     * @var 
+     * @var
      * @\EasySwoole\Http\Annotation\DI(key="IOC")
      */
     public $IOC;
@@ -98,7 +98,7 @@ class Test extends \EasySwoole\Http\AbstractInterface\AnnotationController
      * @Method(allow={GET,POST})
      * @\EasySwoole\Http\Annotation\Param(name="test",from={POST})
      * @\EasySwoole\Http\Annotation\Param(name="msg",alias="消息字段",lengthMax="20|消息过长",required="消息不能为空")
-     * @\EasySwoole\Http\Annotation\Param(name="type",inArray="[1,2,3,4]")
+     * @\EasySwoole\Http\Annotation\Param(name="type",inArray="{1,2,3,4}")
      */
     function fuck($test,$msg)
     {
@@ -119,12 +119,11 @@ class Test extends \EasySwoole\Http\AbstractInterface\AnnotationController
 $request = new \EasySwoole\Http\Request();
 $request->withQueryParams([
     'msg'=>"this is msg",
-    'type'=>5
+    'type'=>1
 ]);
 
 $request->withMethod("get");
 $response = new \EasySwoole\Http\Response();
 $test = new Test();
 $test->__hook('fuck',$request,$response);
-
 ```
