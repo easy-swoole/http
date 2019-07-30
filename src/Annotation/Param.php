@@ -41,7 +41,7 @@ final class Param extends AbstractAnnotationTag
         'notEmpty', 'numeric', 'notInArray', 'length', 'lengthMax', 'lengthMin',
         'betweenLen', 'money', 'max', 'min', 'regex', 'allDigital',
         'required', 'timestamp', 'timestampBeforeDate', 'timestampAfterDate',
-        'timestampBefore', 'timestampAfter', 'url'
+        'timestampBefore', 'timestampAfter', 'url','optional'
     ];
 
     /**
@@ -192,6 +192,11 @@ final class Param extends AbstractAnnotationTag
      * @var string
      */
     public $url;
+
+    /**
+     * @var string
+     */
+    public $optional;
 
     public function tagName(): string
     {
