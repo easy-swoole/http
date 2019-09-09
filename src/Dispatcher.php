@@ -195,13 +195,8 @@ class Dispatcher
                 $this->hookThrowable($throwable,$request,$response);
             }
         }else{
-            if(in_array($request->getUri()->getPath(),['/','/index.html'])){
-                $content = file_get_contents(__DIR__.'/Static/welcome.html');
-            }else{
-                $response->withStatus(Status::CODE_NOT_FOUND);
-                $content = file_get_contents(__DIR__.'/Static/404.html');
-            }
-            $response->write($content);
+            $response->withStatus(404);
+            $response->write("not controller class match");
         }
     }
 
