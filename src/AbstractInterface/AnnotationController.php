@@ -100,7 +100,7 @@ abstract class AnnotationController extends Controller
                 if(!empty($annotations['Method'])){
                     $method = $annotations['Method'][0]->allow;
                     if(!in_array($this->request()->getMethod(),$method)){
-                        throw new AnnotationMethodNotAllow("request method{$this->request()->getMethod()} is not allow for action {$actionName} in class ".(static::class) );
+                        throw new AnnotationMethodNotAllow("request method {$this->request()->getMethod()} is not allow for action {$actionName} in class ".(static::class) );
                     }
                 }
                 /*
