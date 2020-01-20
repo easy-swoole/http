@@ -110,7 +110,7 @@ abstract class Controller
             if ($this->onRequest($actionName) !== false) {
                 if (isset($this->allowMethodReflections[$actionName])) {
                     if($actionHook){
-                        $forwardPath = call_user_func($actionHook);
+                        $forwardPath = call_user_func($actionHook,$actionName,$request,$response);
                     }else{
                         $forwardPath = $this->$actionName();
                     }
