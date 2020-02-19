@@ -49,8 +49,8 @@ abstract class Controller
         foreach ($properties as $property) {
             $name = $property->getName();
             $this->propertyReflections[$name] = $property;
-            //不重置静态变量与保护私有变量
-            if ($property->isPublic() && !$property->isStatic()) {
+            //不重置静态变量与私有变量
+            if (($property->isPublic() || $property->isProtected()) && !$property->isStatic()) {
                 $this->defaultProperties[$name] = $this->{$name};
             }
         }
