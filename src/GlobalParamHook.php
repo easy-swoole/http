@@ -5,6 +5,7 @@ namespace EasySwoole\Http;
 
 
 use EasySwoole\Component\Singleton;
+use EasySwoole\Session\Session;
 use EasySwoole\Spl\SplContextArray;
 
 class GlobalParamHook
@@ -60,6 +61,21 @@ class GlobalParamHook
             }
             $_POST->loadArray($request->getParsedBody());
 
+        });
+        return $this;
+    }
+
+    function hookSession(\SessionHandlerInterface $handler,$sessionName = 'easy_swoole_sess',string $savePath = '/')
+    {
+        Session::getInstance($handler,$sessionName,$savePath);
+        $this->addOnRequest(function (Request $request,Response $response)use($sessionName){
+            $cookie = $request->getCookieParams($sessionName);
+            if(empty($cookie)){
+                $sid = Session::getInstance()->sessionId();
+                $response->setCookie($sessionName,$sid);
+            }else{
+                Session::getInstance()->sessionId($cookie);
+            }
         });
     }
 }

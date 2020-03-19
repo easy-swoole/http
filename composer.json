@@ -15,10 +15,11 @@
         "php": ">=7.1.0",
         "ext-swoole":">=4.0",
         "easyswoole/spl": "^1.0",
-        "easyswoole/component": "^2.0",
+        "easyswoole/component": "^2.1",
         "easyswoole/validate": "^1.0",
         "nikic/fast-route": "^1.3",
-        "psr/http-message": "^1.0"
+        "psr/http-message": "^1.0",
+        "easyswoole/session": "2.x"
     },
     "autoload": {
         "psr-4": {
