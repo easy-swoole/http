@@ -41,24 +41,24 @@ class GlobalParamHook
 
     function hookDefault()
     {
+        global $_GET;
+        if(!$_GET instanceof SplContextArray){
+            $_GET = new SplContextArray();
+        }
+        global $_COOKIE;
+        if(!$_COOKIE instanceof SplContextArray){
+            $_COOKIE = new SplContextArray();
+        }
+        global $_POST;
+        if(!$_POST instanceof SplContextArray){
+            $_POST = new SplContextArray();
+        }
         $this->addOnRequest(function (Request $request){
             global $_GET;
-            if(!$_GET instanceof SplContextArray){
-                $_GET = new SplContextArray();
-            }
             $_GET->loadArray($request->getQueryParams());
-
-
             global $_COOKIE;
-            if(!$_COOKIE instanceof SplContextArray){
-                $_COOKIE = new SplContextArray();
-            }
             $_COOKIE->loadArray($request->getCookieParams());
-
             global $_POST;
-            if(!$_POST instanceof SplContextArray){
-                $_POST = new SplContextArray();
-            }
             $_POST->loadArray($request->getParsedBody());
 
         });
@@ -67,7 +67,16 @@ class GlobalParamHook
 
     function hookSession(\SessionHandlerInterface $handler,$sessionName = 'easy_swoole_sess',string $savePath = '/')
     {
-        Session::getInstance($handler,$sessionName,$savePath);
+        global $_SESSION;
+        $_SESSION = null;
+        $_SESSION = Session::getInstance($handler,$sessionName,$savePath)->getContextArray();
+        $_SESSION->setOnContextCreate(function (SplContextArray $contextArray){
+            $contextArray->loadArray(Session::getInstance()->all());
+        });
+        Session::getInstance()->setOnStart(function (){
+            global $_SESSION;
+            $_SESSION->loadArray(Session::getInstance()->all());
+        });
         $this->addOnRequest(function (Request $request,Response $response)use($sessionName){
             $cookie = $request->getCookieParams($sessionName);
             if(empty($cookie)){
