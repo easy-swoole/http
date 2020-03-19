@@ -11,64 +11,55 @@ class GlobalParamHook
 {
     use Singleton;
 
-    private $handler_list = [];
+    private $onRequest = [];
+    private $afterRequest = [];
 
-    function hook(string $name,callable $onRequest,?callable $afterRequest = null)
+    function addOnRequest(callable $call)
     {
-        $this->handler_list[$name] = [
-            $onRequest,
-            $afterRequest
-        ];
+        $this->onRequest[] = $call;
+    }
+
+    function addAfterRequest(callable $call)
+    {
+        $this->afterRequest[] = $call;
     }
 
     function onRequest(Request $request,Response $response)
     {
-        foreach ($this->handler_list as $name => $value){
-            if(!$$name instanceof SplContextArray){
-                $$name = new SplContextArray();
-            }
-            $res = call_user_func($value[0],$$name,$request,$response);
-            if(is_array($res)){
-                $$name->loadArray($res);
-            }
+        foreach ($this->onRequest as $call){
+            call_user_func($call,$request,$response);
         }
     }
 
     function afterRequest(Request $request,Response $response)
     {
-        foreach ($this->handler_list as $name => $value){
-            if(!$$name instanceof SplContextArray){
-                $$name = new SplContextArray();
-            }
-            call_user_func($value[1],$$name,$request,$response);
+        foreach ($this->afterRequest as $call){
+            call_user_func($call,$request,$response);
         }
     }
 
     function hookDefault()
     {
-        $this->hookCookie();
-        $this->hookGet();
-        $this->hookPost();
-    }
+        $this->addOnRequest(function (Request $request){
+            global $_GET;
+            if(!$_GET instanceof SplContextArray){
+                $_GET = new SplContextArray();
+            }
+            $_GET->loadArray($request->getQueryParams());
 
-    public function hookCookie()
-    {
-        $this->hook('_COOKIE',function (SplContextArray $array,Request $request){
-            return $request->getCookieParams();
-        });
-    }
 
-    public function hookGet()
-    {
-        $this->hook('_GET',function (SplContextArray $array,Request $request){
-            return $request->getQueryParams();
-        });
-    }
+            global $_COOKIE;
+            if(!$_COOKIE instanceof SplContextArray){
+                $_COOKIE = new SplContextArray();
+            }
+            $_COOKIE->loadArray($request->getCookieParams());
 
-    public function hookPost()
-    {
-        $this->hook('_POST',function (SplContextArray $array,Request $request){
-            return $request->getParsedBody();
+            global $_POST;
+            if(!$_POST instanceof SplContextArray){
+                $_POST = new SplContextArray();
+            }
+            $_POST->loadArray($request->getParsedBody());
+
         });
     }
 }
