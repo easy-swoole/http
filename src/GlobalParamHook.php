@@ -14,7 +14,37 @@ class GlobalParamHook
 
     private $onRequest = [];
     private $afterRequest = [];
-
+    private $cookieExpire = 0;
+    private $cookiePath = '/';
+    private $cookieDomain = '';
+    private $cookieSecure = false;
+    private $cookieHttponly = false;
+    private $cookieSamesite = '';
+    
+    function setCookieExpire(int $expire){
+        $this->cookieExpire = $expire;
+    }
+    
+    function setCookiePath(string $path){
+        $this->cookiePath = $path;
+    }
+    
+    function setCookieDomain(string $domain){
+        $this->cookieDomain = $domain;
+    }
+    
+    function setCookieSecure(bool $secure){
+        $this->cookieSecure = $secure;
+    }
+    
+    function setCookieHttponly(bool $httponly){
+        $this->cookieHttponly = $httponly;
+    }
+    
+    function setCookieSamesite(string $cookieSamesite){
+        $this->cookieSamesite = $cookieSamesite;
+    }
+    
     function addOnRequest(callable $call)
     {
         $this->onRequest[] = $call;
@@ -39,6 +69,10 @@ class GlobalParamHook
         }
     }
 
+    function setCookieConfig(int $expire,){
+        $this->cookieConfig=['expire'=>$expire];
+    }
+    
     function hookDefault()
     {
         global $_GET;
@@ -81,7 +115,7 @@ class GlobalParamHook
             $cookie = $request->getCookieParams($sessionName);
             if(empty($cookie)){
                 $sid = Session::getInstance()->sessionId();
-                $response->setCookie($sessionName,$sid);
+                $response->setCookie($sessionName,$sid,$this->cookieExpire,$this->cookiePath,$this->cookieDomain,$this->cookieSecure,$this->cookieHttponly,$this->cookieSamesite);
             }else{
                 Session::getInstance()->sessionId($cookie);
             }
