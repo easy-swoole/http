@@ -20,6 +20,7 @@ abstract class Controller
     private $actionName;
     private $defaultProperties = [];
     private $allowMethodReflections = [];
+    private $propertyReflections = [];
 
     function __construct()
     {
@@ -34,12 +35,10 @@ abstract class Controller
         ];
 
         //支持在子类控制器中以private，protected来修饰某个方法不可见
-        $list = [];
         $ref = new \ReflectionClass(static::class);
         $public = $ref->getMethods(\ReflectionMethod::IS_PUBLIC);
         foreach ($public as $item) {
-            if(!in_array($item->getName(),$forbidList)){
-                array_push($list, $item->getName());
+            if((!in_array($item->getName(),$forbidList)) && (!$item->isStatic())){
                 $this->allowMethodReflections[$item->getName()] = $item;
             }
         }
@@ -48,10 +47,11 @@ abstract class Controller
         $ref = new \ReflectionClass(static::class);
         $properties = $ref->getProperties();
         foreach ($properties as $property) {
+            $name = $property->getName();
+            $this->propertyReflections[$name] = $property;
             //不重置静态变量与私有变量
             if (($property->isPublic() || $property->isProtected()) && !$property->isStatic()) {
-                $name = $property->getName();
-                $this->defaultProperties[$name] = $this->$name;
+                $this->defaultProperties[$name] = $this->{$name};
             }
         }
     }
@@ -63,11 +63,16 @@ abstract class Controller
         return $this->allowMethodReflections;
     }
 
+    protected function getPropertyReflections():array
+    {
+        return $this->propertyReflections;
+    }
+
     protected function gc()
     {
         //恢复默认值
         foreach ($this->defaultProperties as $property => $value) {
-            $this->$property = $value;
+            $this->{$property} = $value;
         }
     }
 
@@ -95,7 +100,7 @@ abstract class Controller
         return $this->actionName;
     }
 
-    public function __hook(?string $actionName, Request $request, Response $response)
+    public function __hook(?string $actionName, Request $request, Response $response,callable $actionHook = null)
     {
         $forwardPath = null;
         $this->request = $request;
@@ -103,8 +108,12 @@ abstract class Controller
         $this->actionName = $actionName;
         try {
             if ($this->onRequest($actionName) !== false) {
-                if (array_key_exists($actionName, $this->allowMethodReflections)) {
-                    $forwardPath = $this->$actionName();
+                if (isset($this->allowMethodReflections[$actionName])) {
+                    if($actionHook){
+                        $forwardPath = call_user_func($actionHook,$actionName,$request,$response);
+                    }else{
+                        $forwardPath = $this->$actionName();
+                    }
                 } else {
                     $forwardPath = $this->actionNotFound($actionName);
                 }

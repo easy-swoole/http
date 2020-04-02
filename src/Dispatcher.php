@@ -172,36 +172,31 @@ class Dispatcher
 
         if(!empty($finalClass)){
             try{
-                $c = $this->getController($finalClass);
+                $controllerObject = $this->getController($finalClass);
             }catch (\Throwable $throwable){
                 $this->hookThrowable($throwable,$request,$response);
                 return;
             }
-            if($c instanceof Controller){
+            if($controllerObject instanceof Controller){
                 try{
-                    $path = $c->__hook($actionName,$request,$response);
-                    if(is_string($path)){
-                        $path = UrlParser::pathInfo($path);
-                        $request->getUri()->withPath($path);
+                    $forward = $controllerObject->__hook($actionName,$request,$response);
+                    if(is_string($forward) && (strlen($forward) > 0) && ($forward != $path)){
+                        $forward = UrlParser::pathInfo($forward);
+                        $request->getUri()->withPath($forward);
                         $this->dispatch($request,$response);
                     }
                 }catch (\Throwable $throwable){
                     $this->hookThrowable($throwable,$request,$response);
                 }finally {
-                    $this->recycleController($finalClass,$c);
+                    $this->recycleController($finalClass,$controllerObject);
                 }
             }else{
                 $throwable = new ControllerPoolEmpty('controller pool empty for '.$finalClass);
                 $this->hookThrowable($throwable,$request,$response);
             }
         }else{
-            if(in_array($request->getUri()->getPath(),['/','/index.html'])){
-                $content = file_get_contents(__DIR__.'/Static/welcome.html');
-            }else{
-                $response->withStatus(Status::CODE_NOT_FOUND);
-                $content = file_get_contents(__DIR__.'/Static/404.html');
-            }
-            $response->write($content);
+            $response->withStatus(404);
+            $response->write("not controller class match");
         }
     }
 

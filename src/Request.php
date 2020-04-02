@@ -18,22 +18,24 @@ class Request extends ServerRequest
 {
     private $request;
 
-    function __construct(\swoole_http_request $request)
+    function __construct(\swoole_http_request $request = null)
     {
-        $this->request = $request;
-        $this->initHeaders();
-        $protocol = str_replace('HTTP/', '', $request->server['server_protocol']) ;
-        //为单元测试准备
-        if($request->fd){
-            $body = new Stream($request->rawContent());
-        }else{
-            $body = new Stream('');
+        if($request){
+            $this->request = $request;
+            $this->initHeaders();
+            $protocol = str_replace('HTTP/', '', $request->server['server_protocol']) ;
+            //为单元测试准备
+            if($request->fd){
+                $body = new Stream($request->rawContent());
+            }else{
+                $body = new Stream('');
+            }
+            $uri = $this->initUri();
+            $files = $this->initFiles();
+            $method = $request->server['request_method'];
+            parent::__construct($method, $uri, null, $body, $protocol, $request->server);
+            $this->withCookieParams($this->initCookie())->withQueryParams($this->initGet())->withParsedBody($this->initPost())->withUploadedFiles($files);
         }
-        $uri = $this->initUri();
-        $files = $this->initFiles();
-        $method = $request->server['request_method'];
-        parent::__construct($method, $uri, null, $body, $protocol, $request->server);
-        $this->withCookieParams($this->initCookie())->withQueryParams($this->initGet())->withParsedBody($this->initPost())->withUploadedFiles($files);
     }
 
     function getRequestParam(...$key)

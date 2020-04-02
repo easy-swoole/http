@@ -74,44 +74,56 @@ $http->start();
 
 ## test
 ```
-class A extends \EasySwoole\Http\AbstractInterface\AnnotationController{
+use EasySwoole\Http\Annotation\Method;
+
+class Test extends \EasySwoole\Http\AbstractInterface\AnnotationController
+{
+    /**
+     * @\EasySwoole\Http\Annotation\Context(key="MYSQL")
+     */
+    public $mysql;
 
     /**
-     * @method(allow=get,post)
-     * @param(name=test,required=不能为空,default=2)
-     * @param(name=test,required,maxLen=12,minLen=3,type=get)
-     * @param(name=token,required,type=cookie)
-     * @timeout(max=1.3)
+     * @var
+     * @\EasySwoole\Http\Annotation\DI(key="IOC")
      */
+    public $IOC;
+
     function index()
     {
-
+        // TODO: Implement index() method.
     }
 
     /**
-     * @param(name=test,required=不能为空,default=2)
+     * @Method(allow={GET,POST})
+     * @\EasySwoole\Http\Annotation\Param(name="test",from={POST})
+     * @\EasySwoole\Http\Annotation\Param(name="msg",alias="消息字段",lengthMax="20|消息过长",required="消息不能为空")
+     * @\EasySwoole\Http\Annotation\Param(name="type",inArray="{1,2,3,4}")
      */
-    function b()
+    function fuck($test,$msg)
     {
-
+        var_dump($test,$msg);
     }
 
-    /**
-     * @method(allow=get)
-     * @param(name=test,required=不能为空,default=2)
-     */
-    function c()
+    protected function onException(\Throwable $throwable): void
     {
-
+        if($throwable instanceof \EasySwoole\Http\Exception\ParamAnnotationValidateError){
+            var_dump($throwable->getValidate()->getError()->getErrorRuleMsg());
+        }else{
+            var_dump($throwable->getMessage());
+        }
     }
 
-    /**
-     * @method(forbid=get)
-     * @param(name=test,required=不能为空,default=2)
-     */
-    function d()
-    {
-
-    }
 }
+
+$request = new \EasySwoole\Http\Request();
+$request->withQueryParams([
+    'msg'=>"this is msg",
+    'type'=>1
+]);
+
+$request->withMethod("get");
+$response = new \EasySwoole\Http\Response();
+$test = new Test();
+$test->__hook('fuck',$request,$response);
 ```
