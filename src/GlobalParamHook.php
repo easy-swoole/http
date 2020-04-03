@@ -87,6 +87,14 @@ class GlobalParamHook
         if(!$_POST instanceof SplContextArray){
             $_POST = new SplContextArray();
         }
+        global $_FILES;
+        if(!$_FILES instanceof SplContextArray){
+            $_FILES = new SplContextArray();
+        }
+        global $_SERVER;
+        if(!$_SERVER instanceof SplContextArray){
+            $_SERVER = new SplContextArray();
+        }
         $this->addOnRequest(function (Request $request){
             global $_GET;
             $_GET->loadArray($request->getQueryParams());
@@ -94,7 +102,10 @@ class GlobalParamHook
             $_COOKIE->loadArray($request->getCookieParams());
             global $_POST;
             $_POST->loadArray($request->getParsedBody());
-
+            global $_FILES;
+            $_FILES->loadArray($request->getSwooleRequest()->files);
+            global $_SERVER;
+            $_SERVER->loadArray($request->getSwooleRequest()->server);
         });
         return $this;
     }
