@@ -69,10 +69,6 @@ class GlobalParamHook
         }
     }
 
-    function setCookieConfig(int $expire,){
-        $this->cookieConfig=['expire'=>$expire];
-    }
-    
     function hookDefault()
     {
         global $_GET;
