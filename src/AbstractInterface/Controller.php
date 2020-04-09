@@ -77,13 +77,13 @@ abstract class Controller
     function index()
     {
         $class = static::class;
-        $this->writeJson(200,null,"this is {$class} index action");
+        $this->writeJson(Status::CODE_OK,null,"this is {$class} index action");
     }
 
     protected function actionNotFound(?string $action)
     {
         $class = static::class;
-        $this->writeJson(404,null,"{$class} has not action for {$action}");
+        $this->writeJson(Status::CODE_NOT_FOUND,null,"{$class} has not action for {$action}");
     }
 
     protected function afterAction(?string $actionName): void
