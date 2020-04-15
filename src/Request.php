@@ -97,7 +97,7 @@ class Request extends ServerRequest
             $normalized = array();
             foreach($this->request->files as $key => $value){
                 //如果是二维数组文件
-                if(is_array($value) && !isset($value['tmp_name'])){
+                if(is_array($value) && empty($value['tmp_name'])){
                     $normalized[$key] = [];
                     foreach($value as $file){
                         $file = $this->initFile($file);
@@ -121,7 +121,7 @@ class Request extends ServerRequest
 
     private function initFile(array $file)
     {
-        if(!isset($file['tmp_name'])){
+        if(empty($file['tmp_name'])){
             return null;
         }
         return new UploadFile(
