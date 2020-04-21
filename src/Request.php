@@ -100,6 +100,9 @@ class Request extends ServerRequest
                 if(is_array($value) && empty($value['tmp_name'])){
                     $normalized[$key] = [];
                     foreach($value as $file){
+                        if (empty($value['tmp_name'])){
+                            continue;
+                        }
                         $file = $this->initFile($file);
                         if($file){
                             $normalized[$key][] = $file;
