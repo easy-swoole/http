@@ -105,7 +105,12 @@ class GlobalParamHook
             global $_FILES;
             $_FILES->loadArray($request->getSwooleRequest()->files);
             global $_SERVER;
-            $_SERVER->loadArray($request->getSwooleRequest()->server);
+            foreach ($request->getSwooleRequest()->header as $key => $value) {
+                $_SERVER['HTTP_' . strtoupper(str_replace('-', '_', $key))] = $value;
+            }
+            foreach ($request->getSwooleRequest()->server as $key => $value) {
+                $_SERVER[strtoupper(str_replace('-', '_', $key))] = $value;
+            }
         });
         return $this;
     }
