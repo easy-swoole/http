@@ -116,6 +116,7 @@ class Dispatcher
                         $path = UrlParser::pathInfo($request->getUri()->getPath());
                     }
                     $request->getUri()->withPath($path);
+                    goto response;
                 }catch (\Throwable $throwable){
                     $this->hookThrowable($throwable,$request,$response);
                     //出现异常的时候，不在往下dispatch
