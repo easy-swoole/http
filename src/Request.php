@@ -73,7 +73,7 @@ class Request extends ServerRequest
             $host = $this->request->header['host'];
             $host = explode(":",$host);
             $realHost = $host[0];
-            $port = isset($host[1]) ? $host[1] : 80;
+            $port = isset($host[1]) ? $host[1] : null;
         }else{
             $realHost = '127.0.0.1';
             $port = $this->request->server['server_port'];
