@@ -30,6 +30,9 @@ class Dispatcher
      * @var RouteCollector
      */
     private $extraRouterCollector = null;
+    private $routerMethodNotAllowCallBack;
+    private $routerNotFoundCallBack;
+    private $globalModel;
     private $controllerNameSpacePrefix;
     private $maxDepth;
     private $maxPoolNum;
@@ -76,6 +79,23 @@ class Dispatcher
         return $this->extraRouterCollector;
     }
 
+    /**
+     * @param mixed $routerMethodNotAllowCallBack
+     */
+    public function setRouterMethodNotAllowCallBack($routerMethodNotAllowCallBack): void
+    {
+        $this->routerMethodNotAllowCallBack = $routerMethodNotAllowCallBack;
+    }
+
+    /**
+     * @param mixed $routerNotFoundCallBack
+     */
+    public function setRouterNotFoundCallBack($routerNotFoundCallBack): void
+    {
+        $this->routerNotFoundCallBack = $routerNotFoundCallBack;
+    }
+
+
     public function dispatch(Request $request,Response $response):void
     {
         /*
@@ -85,16 +105,24 @@ class Dispatcher
             $class = $this->controllerNameSpacePrefix.'\\Router';
             try{
                 $data = [];
+                //数据合并。全局的Router class设置的权限最高。
                 if(class_exists($class)){
                     $ref = new \ReflectionClass($class);
                     if($ref->isSubclassOf(AbstractRouter::class)){
                         $this->routerRegister = $ref->newInstance();
                         $data = $this->routerRegister->getRouteCollector()->getData();
+                        if($this->routerRegister->getMethodNotAllowCallBack()){
+                            $this->routerMethodNotAllowCallBack = $this->routerRegister->getMethodNotAllowCallBack();
+                        }
+                        if($this->routerRegister->getRouterNotFoundCallBack()){
+                            $this->routerNotFoundCallBack = $this->routerRegister->getRouterNotFoundCallBack();
+                        }
+                        $this->globalModel = $this->routerRegister->isGlobalMode();
                     }else{
                         throw new RouterError("class : {$class} not AbstractRouter class");
                     }
                 }
-                //数据合并。全局的Router class设置的权限最高。
+
                 if($this->extraRouterCollector){
                     $data = $data + $this->extraRouterCollector->getData();
                 }
@@ -124,12 +152,12 @@ class Dispatcher
                         break;
                     }
                     case RouterDispatcher::METHOD_NOT_ALLOWED:{
-                        $handler = $this->routerRegister->getMethodNotAllowCallBack();
+                        $handler = $this->routerMethodNotAllowCallBack;
                         break;
                     }
                     case RouterDispatcher::NOT_FOUND:
                     default:{
-                        $handler = $this->routerRegister->getRouterNotFoundCallBack();
+                        $handler = $this->routerNotFoundCallBack;
                         break;
                     }
                 }
@@ -161,7 +189,7 @@ class Dispatcher
             /*
                 * 全局模式的时候，都拦截。非全局模式，否则继续往下
             */
-            if($this->routerRegister->isGlobalMode()){
+            if($this->globalModel){
                 return;
             }
         }
