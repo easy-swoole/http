@@ -14,8 +14,9 @@ use EasySwoole\Http\AbstractInterface\Controller;
 use EasySwoole\Http\Exception\ControllerPoolEmpty;
 use EasySwoole\Http\Exception\RouterError;
 use EasySwoole\Http\Message\Status;
-use Swoole\Coroutine as Co;
 use FastRoute\Dispatcher\GroupCountBased;
+use FastRoute\Dispatcher as RouterDispatcher;
+use Swoole\Coroutine\Channel;
 
 class Dispatcher
 {
@@ -80,15 +81,7 @@ class Dispatcher
             $routeInfo = $this->router->dispatch($request->getMethod(),$request->getUri()->getPath());
             if($routeInfo !== false){
                 switch ($routeInfo[0]) {
-                    case \FastRoute\Dispatcher::NOT_FOUND:{
-                        $handler = $this->routerRegister->getRouterNotFoundCallBack();
-                        break;
-                    }
-                    case \FastRoute\Dispatcher::METHOD_NOT_ALLOWED:{
-                        $handler = $this->routerRegister->getMethodNotAllowCallBack();
-                        break;
-                    }
-                    case \FastRoute\Dispatcher::FOUND:{
+                    case RouterDispatcher::FOUND:{
                         $handler = $routeInfo[1];
                         //合并解析出来的数据
                         $vars = $routeInfo[2];
@@ -96,6 +89,12 @@ class Dispatcher
                         $request->withQueryParams($vars+$data);
                         break;
                     }
+                    case RouterDispatcher::METHOD_NOT_ALLOWED:{
+                        $handler = $this->routerRegister->getMethodNotAllowCallBack();
+                        break;
+                    }
+
+                    case RouterDispatcher::NOT_FOUND:
                     default:{
                         $handler = $this->routerRegister->getRouterNotFoundCallBack();
                         break;
@@ -204,12 +203,12 @@ class Dispatcher
     {
         $classKey = $this->generateClassKey($class);
         if(!isset($this->$classKey)){
-            $this->$classKey = new Co\Channel($this->maxPoolNum+1);
+            $this->$classKey = new Channel($this->maxPoolNum+1);
             $this->controllerPoolCreateNum[$classKey] = 0;
         }
         $channel = $this->$classKey;
         //懒惰创建模式
-        /** @var Co\Channel $channel */
+        /** @var Channel $channel */
         if($channel->isEmpty()){
             $createNum = $this->controllerPoolCreateNum[$classKey];
             if($createNum < $this->maxPoolNum){
@@ -231,7 +230,7 @@ class Dispatcher
     protected function recycleController(string $class,Controller $obj)
     {
         $classKey = $this->generateClassKey($class);
-        /** @var Co\Channel $channel */
+        /** @var Channel $channel */
         $channel = $this->$classKey;
         $channel->push($obj);
     }
