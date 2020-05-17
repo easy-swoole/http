@@ -16,12 +16,20 @@ use EasySwoole\Http\Exception\RouterError;
 use EasySwoole\Http\Message\Status;
 use FastRoute\Dispatcher\GroupCountBased;
 use FastRoute\Dispatcher as RouterDispatcher;
+use FastRoute\RouteCollector;
 use Swoole\Coroutine\Channel;
 
 class Dispatcher
 {
     private $router = null;
+    /**
+     * @var AbstractRouter
+     */
     private $routerRegister = null;
+    /**
+     * @var RouteCollector
+     */
+    private $extraRouterCollector = null;
     private $controllerNameSpacePrefix;
     private $maxDepth;
     private $maxPoolNum;
@@ -50,6 +58,24 @@ class Dispatcher
         $this->httpExceptionHandler = $handler;
     }
 
+    /**
+     * @return false|null|AbstractRouter
+     */
+    function getRouterRegister()
+    {
+        return $this->routerRegister;
+    }
+
+    function setExtraRouterCollector(RouteCollector $collector)
+    {
+        $this->extraRouterCollector = $collector;
+    }
+
+    function getExtraRouterCollector()
+    {
+        return $this->extraRouterCollector;
+    }
+
     public function dispatch(Request $request,Response $response):void
     {
         /*
@@ -58,15 +84,23 @@ class Dispatcher
         if($this->router === null){
             $class = $this->controllerNameSpacePrefix.'\\Router';
             try{
+                $data = [];
                 if(class_exists($class)){
                     $ref = new \ReflectionClass($class);
                     if($ref->isSubclassOf(AbstractRouter::class)){
-                        $this->routerRegister =  $ref->newInstance();
-                        $this->router = new GroupCountBased($this->routerRegister->getRouteCollector()->getData());
+                        $this->routerRegister = $ref->newInstance();
+                        $data = $this->routerRegister->getRouteCollector()->getData();
                     }else{
-                        $this->router = false;
                         throw new RouterError("class : {$class} not AbstractRouter class");
                     }
+                }
+                //数据合并。全局的Router class设置的权限最高。
+                if($this->extraRouterCollector){
+                    $data = $data + $this->extraRouterCollector->getData();
+                }
+
+                if(!empty($data)){
+                    $this->router = new GroupCountBased($data);
                 }else{
                     $this->router = false;
                 }
@@ -93,7 +127,6 @@ class Dispatcher
                         $handler = $this->routerRegister->getMethodNotAllowCallBack();
                         break;
                     }
-
                     case RouterDispatcher::NOT_FOUND:
                     default:{
                         $handler = $this->routerRegister->getRouterNotFoundCallBack();
