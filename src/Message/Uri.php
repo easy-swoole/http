@@ -27,7 +27,7 @@ class Uri implements UriInterface
             $this->scheme = isset($parts['scheme']) ? $parts['scheme'] : '';
             $this->userInfo = isset($parts['user']) ? $parts['user'] : '';
             $this->host = isset($parts['host']) ? $parts['host'] : '';
-            $this->port = isset($parts['port']) ? $parts['port'] : 80;
+            $this->port = isset($parts['port']) ? $parts['port'] : null;
             $this->path = isset($parts['path']) ? $parts['path'] : '';
             $this->query = isset($parts['query']) ? $parts['query'] : '';
             $this->fragment = isset($parts['fragment']) ? $parts['fragment'] : '';
