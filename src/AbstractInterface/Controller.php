@@ -180,9 +180,4 @@ abstract class Controller
         libxml_disable_entity_loader(true);
         return simplexml_load_string($this->request()->getBody()->__toString(), $className, $options);
     }
-
-    protected function validate(Validate $validate)
-    {
-        return $validate->validate($this->request()->getRequestParam());
-    }
 }
