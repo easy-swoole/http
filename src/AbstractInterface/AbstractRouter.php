@@ -18,6 +18,8 @@ abstract class AbstractRouter
     private $methodNotAllowCallBack = null;
     private $routerNotFoundCallBack = null;
     private $globalMode = false;
+    private $pathInfoMode = true;
+
     final function __construct()
     {
         $this->routeCollector = new RouteCollector(new Std(),new GroupCountBased());
@@ -25,6 +27,22 @@ abstract class AbstractRouter
     }
 
     abstract function initialize(RouteCollector $routeCollector);
+
+    /**
+     * @return bool
+     */
+    public function isPathInfoMode(): bool
+    {
+        return $this->pathInfoMode;
+    }
+
+    /**
+     * @param bool $pathInfoMode
+     */
+    public function setPathInfoMode(bool $pathInfoMode): void
+    {
+        $this->pathInfoMode = $pathInfoMode;
+    }
 
     function getRouteCollector():RouteCollector
     {

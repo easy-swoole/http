@@ -39,6 +39,7 @@ class Dispatcher
     private $controllerPoolCreateNum = [];
     private $httpExceptionHandler = null;
     private $controllerPoolWaitTime = 5.0;
+    private $pathInfoMode = true;
 
     function __construct(string $controllerNameSpace,int $maxDepth = 5,int $maxPoolNum = 200)
     {
@@ -118,6 +119,7 @@ class Dispatcher
                             $this->routerNotFoundCallBack = $this->routerRegister->getRouterNotFoundCallBack();
                         }
                         $this->globalModel = $this->routerRegister->isGlobalMode();
+                        $this->pathInfoMode = $this->routerRegister->isPathInfoMode();
                     }else{
                         throw new RouterError("class : {$class} not AbstractRouter class");
                     }
@@ -139,8 +141,13 @@ class Dispatcher
         }
         $path = UrlParser::pathInfo($request->getUri()->getPath());
         if($this->router instanceof GroupCountBased){
+            if($this->pathInfoMode){
+                $routerPath = $path;
+            }else{
+                $routerPath = $request->getUri()->__toString();
+            }
             $handler = null;
-            $routeInfo = $this->router->dispatch($request->getMethod(),$path);
+            $routeInfo = $this->router->dispatch($request->getMethod(),$routerPath);
             if($routeInfo !== false){
                 switch ($routeInfo[0]) {
                     case RouterDispatcher::FOUND:{
