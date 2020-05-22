@@ -99,7 +99,11 @@ class GlobalParamHook
             global $_POST;
             $_POST->loadArray($request->getParsedBody());
             global $_FILES;
-            $_FILES->loadArray($request->getSwooleRequest()->files);
+            $files = [];
+            if(!empty($request->getSwooleRequest()->files)){
+                $files = $request->getSwooleRequest()->files;
+            }
+            $_FILES->loadArray($files);
             global $_SERVER;
             $server = [];
             foreach ($request->getSwooleRequest()->header as $key => $value) {
