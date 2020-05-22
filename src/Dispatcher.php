@@ -144,7 +144,7 @@ class Dispatcher
             if($this->pathInfoMode){
                 $routerPath = $path;
             }else{
-                $routerPath = $request->getUri()->__toString();
+                $routerPath = $request->getUri()->getPath();
             }
             $handler = null;
             $routeInfo = $this->router->dispatch($request->getMethod(),$routerPath);
