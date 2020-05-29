@@ -97,10 +97,10 @@ class Response extends MessageResponse
     /*
      * 目前swoole不支持同键名的header   因此只能通过别的方式设置多个cookie
      */
-    public function setCookie($name, $value = null, $expire = null, $path = '/', $domain = '', $secure = false, $httponly = false){
+    public function setCookie(string $name, $value = null, $expire = null,string $path = '/',string $domain = '',bool $secure = false,bool $httponly = false,string $samesite = ''){
         if(!$this->isEndResponse()){
             $this->withAddedCookie([
-                $name,$value,$expire,$path,$domain,$secure,$httponly
+                $name,$value,$expire,$path,$domain,$secure,$httponly,$samesite
             ]);
             return true;
         }else{
