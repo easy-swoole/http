@@ -18,7 +18,10 @@
         "easyswoole/component": "^2.1",
         "nikic/fast-route": "^1.3",
         "psr/http-message": "^1.0",
-        "easyswoole/session": "2.x"
+        "easyswoole/session": "2.x",
+        "ext-libxml": "*",
+        "ext-simplexml": "*",
+        "ext-json": "*"
     },
     "autoload": {
         "psr-4": {

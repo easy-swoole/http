@@ -11,7 +11,6 @@ namespace EasySwoole\Http\AbstractInterface;
 use EasySwoole\Http\Message\Status;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
-use EasySwoole\Validate\Validate;
 
 abstract class Controller
 {
@@ -105,43 +104,6 @@ abstract class Controller
         return $this->actionName;
     }
 
-    public function __hook(?string $actionName, Request $request, Response $response,callable $actionHook = null)
-    {
-        $forwardPath = null;
-        $this->request = $request;
-        $this->response = $response;
-        $this->actionName = $actionName;
-        try {
-            if ($this->onRequest($actionName) !== false) {
-                if (isset($this->allowMethodReflections[$actionName])) {
-                    if($actionHook){
-                        $forwardPath = call_user_func($actionHook,$actionName,$request,$response);
-                    }else{
-                        $forwardPath = $this->$actionName();
-                    }
-                } else {
-                    $forwardPath = $this->actionNotFound($actionName);
-                }
-            }
-        } catch (\Throwable $throwable) {
-            //若没有重构onException，直接抛出给上层
-            $this->onException($throwable);
-        } finally {
-            try {
-                $this->afterAction($actionName);
-            } catch (\Throwable $throwable) {
-                $this->onException($throwable);
-            } finally {
-                try {
-                    $this->gc();
-                } catch (\Throwable $throwable) {
-                    $this->onException($throwable);
-                }
-            }
-        }
-        return $forwardPath;
-    }
-
     protected function request(): Request
     {
         return $this->request;
@@ -179,5 +141,45 @@ abstract class Controller
         //禁止引用外部xml实体
         libxml_disable_entity_loader(true);
         return simplexml_load_string($this->request()->getBody()->__toString(), $className, $options);
+    }
+
+    //该方法用于保留对外调用
+    public function __hook(?string $actionName, Request $request, Response $response)
+    {
+        $this->request = $request;
+        $this->response = $response;
+        $this->actionName = $actionName;
+        return $this->__exec();
+    }
+    //允许用户修改整个请求执行流程
+    protected function __exec()
+    {
+        $actionName = $this->actionName;
+        $forwardPath = null;
+        try {
+            if ($this->onRequest($actionName) !== false) {
+                if (isset($this->allowMethodReflections[$actionName])) {
+                    $forwardPath = $this->$actionName();
+                } else {
+                    $forwardPath = $this->actionNotFound($actionName);
+                }
+            }
+        } catch (\Throwable $throwable) {
+            //若没有重构onException，直接抛出给上层
+            $this->onException($throwable);
+        } finally {
+            try {
+                $this->afterAction($actionName);
+            } catch (\Throwable $throwable) {
+                $this->onException($throwable);
+            } finally {
+                try {
+                    $this->gc();
+                } catch (\Throwable $throwable) {
+                    $this->onException($throwable);
+                }
+            }
+        }
+        return $forwardPath;
     }
 }
