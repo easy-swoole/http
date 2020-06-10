@@ -96,6 +96,52 @@ class Dispatcher
         $this->routerNotFoundCallBack = $routerNotFoundCallBack;
     }
 
+    public function setRouter(?GroupCountBased $based)
+    {
+        $this->router = $based;
+    }
+
+    public function initRouter(?string $routerClass = null)
+    {
+        if($routerClass){
+            $class = $routerClass;
+        }else{
+            $class = $this->controllerNameSpacePrefix.'\\Router';
+        }
+        try{
+            $data = [];
+            //数据合并。全局的Router class设置的权限最高。
+            if(class_exists($class)){
+                $ref = new \ReflectionClass($class);
+                if($ref->isSubclassOf(AbstractRouter::class)){
+                    $this->routerRegister = $ref->newInstance();
+                    $data = $this->routerRegister->getRouteCollector()->getData();
+                    if($this->routerRegister->getMethodNotAllowCallBack()){
+                        $this->routerMethodNotAllowCallBack = $this->routerRegister->getMethodNotAllowCallBack();
+                    }
+                    if($this->routerRegister->getRouterNotFoundCallBack()){
+                        $this->routerNotFoundCallBack = $this->routerRegister->getRouterNotFoundCallBack();
+                    }
+                    $this->globalModel = $this->routerRegister->isGlobalMode();
+                    $this->pathInfoMode = $this->routerRegister->isPathInfoMode();
+                }else{
+                    throw new RouterError("class : {$class} not AbstractRouter class");
+                }
+            }
+
+            if($this->extraRouterCollector){
+                $data = $data + $this->extraRouterCollector->getData();
+            }
+            if(!empty($data)){
+                $this->router = new GroupCountBased($data);
+            }else{
+                $this->router = false;
+            }
+        }catch (\Throwable $throwable){
+            $this->router = false;
+            throw new RouterError($throwable->getMessage());
+        }
+    }
 
     public function dispatch(Request $request,Response $response):void
     {
@@ -103,41 +149,7 @@ class Dispatcher
          * 进行一次初始化判定
          */
         if($this->router === null){
-            $class = $this->controllerNameSpacePrefix.'\\Router';
-            try{
-                $data = [];
-                //数据合并。全局的Router class设置的权限最高。
-                if(class_exists($class)){
-                    $ref = new \ReflectionClass($class);
-                    if($ref->isSubclassOf(AbstractRouter::class)){
-                        $this->routerRegister = $ref->newInstance();
-                        $data = $this->routerRegister->getRouteCollector()->getData();
-                        if($this->routerRegister->getMethodNotAllowCallBack()){
-                            $this->routerMethodNotAllowCallBack = $this->routerRegister->getMethodNotAllowCallBack();
-                        }
-                        if($this->routerRegister->getRouterNotFoundCallBack()){
-                            $this->routerNotFoundCallBack = $this->routerRegister->getRouterNotFoundCallBack();
-                        }
-                        $this->globalModel = $this->routerRegister->isGlobalMode();
-                        $this->pathInfoMode = $this->routerRegister->isPathInfoMode();
-                    }else{
-                        throw new RouterError("class : {$class} not AbstractRouter class");
-                    }
-                }
-
-                if($this->extraRouterCollector){
-                    $data = $data + $this->extraRouterCollector->getData();
-                }
-
-                if(!empty($data)){
-                    $this->router = new GroupCountBased($data);
-                }else{
-                    $this->router = false;
-                }
-            }catch (\Throwable $throwable){
-                $this->router = false;
-                throw new RouterError($throwable->getMessage());
-            }
+            $this->initRouter();
         }
         $path = UrlParser::pathInfo($request->getUri()->getPath());
         if($this->router instanceof GroupCountBased){
