@@ -18,7 +18,7 @@ class Request extends ServerRequest
 {
     private $request;
 
-    function __construct(\swoole_http_request $request = null)
+    function __construct(\Swoole\Http\Request $request = null)
     {
         if($request){
             $this->request = $request;

@@ -49,7 +49,7 @@ class Index extends Controller
 }
 
 
-$http = new \swoole_http_server("0.0.0.0", 9501);
+$http = new \Swoole\Http\Request("0.0.0.0", 9501);
 $http->set([
     'worker_num'=>1
 ]);
