@@ -45,17 +45,27 @@ class UploadFile implements UploadedFileInterface
     public function moveTo($targetPath)
     {
         // TODO: Implement moveTo() method.
+        if (!(is_string($targetPath) && false === empty($targetPath))) {
+            throw new FileException('Please provide a valid path');
+        }
+
+        if ($this->size <= 0) {
+            throw new FileException('Unable to retrieve stream');
+        }
+
         $dir = dirname($targetPath);
         if (!File::createDirectory($dir)) {
             throw new FileException(sprintf('Directory "%s" was not created', $dir));
-        };
+        }
 
-        $moved = file_put_contents($targetPath,$this->stream) ? true :false;
-        if (!$moved) {
+        $movedSize = file_put_contents($targetPath,$this->stream);
+        if (!$movedSize) {
             throw new FileException(sprintf('Uploaded file could not be move to %s', $dir));
         }
 
-        return true;
+        if ($movedSize !== $this->size) {
+            throw new FileException(sprintf('File upload specified directory(%s) interrupted', $dir));
+        }
     }
 
     public function getSize()
