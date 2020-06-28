@@ -7,7 +7,7 @@
 namespace EasySwoole\Http\Exception;
 
 
-class FileException extends \Exception
+class FileException extends Exception
 {
 
 }
