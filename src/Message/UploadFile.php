@@ -49,7 +49,13 @@ class UploadFile implements UploadedFileInterface
         if (!File::createDirectory($dir)) {
             throw new FileException(sprintf('Directory "%s" was not created', $dir));
         };
-        return file_put_contents($targetPath,$this->stream) ? true :false;
+
+        $moved = file_put_contents($targetPath,$this->stream) ? true :false;
+        if (!$moved) {
+            throw new FileException(sprintf('Uploaded file could not be move to %s', $dir));
+        }
+
+        return true;
     }
 
     public function getSize()
