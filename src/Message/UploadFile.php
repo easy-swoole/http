@@ -9,7 +9,7 @@
 namespace EasySwoole\Http\Message;
 
 
-use EasySwoole\Http\Exception\Exception;
+use EasySwoole\Http\Exception\FileException;
 use EasySwoole\Utility\File;
 use Psr\Http\Message\UploadedFileInterface;
 
@@ -47,7 +47,7 @@ class UploadFile implements UploadedFileInterface
         // TODO: Implement moveTo() method.
         $dir = dirname($targetPath);
         if (!File::createDirectory($dir)) {
-            throw new Exception(sprintf('Directory "%s" was not created', $dir));
+            throw new FileException(sprintf('Directory "%s" was not created', $dir));
         };
         return file_put_contents($targetPath,$this->stream) ? true :false;
     }
