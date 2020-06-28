@@ -9,6 +9,8 @@
 namespace EasySwoole\Http\Message;
 
 
+use EasySwoole\Http\Exception\FileException;
+use EasySwoole\Utility\File;
 use Psr\Http\Message\UploadedFileInterface;
 
 class UploadFile implements UploadedFileInterface
@@ -43,7 +45,27 @@ class UploadFile implements UploadedFileInterface
     public function moveTo($targetPath)
     {
         // TODO: Implement moveTo() method.
-        return file_put_contents($targetPath,$this->stream) ? true :false;
+        if (!(is_string($targetPath) && false === empty($targetPath))) {
+            throw new FileException('Please provide a valid path');
+        }
+
+        if ($this->size <= 0) {
+            throw new FileException('Unable to retrieve stream');
+        }
+
+        $dir = dirname($targetPath);
+        if (!File::createDirectory($dir)) {
+            throw new FileException(sprintf('Directory "%s" was not created', $dir));
+        }
+
+        $movedSize = file_put_contents($targetPath,$this->stream);
+        if (!$movedSize) {
+            throw new FileException(sprintf('Uploaded file could not be move to %s', $dir));
+        }
+
+        if ($movedSize !== $this->size) {
+            throw new FileException(sprintf('File upload specified directory(%s) interrupted', $dir));
+        }
     }
 
     public function getSize()
