@@ -9,6 +9,7 @@
 namespace EasySwoole\Http\Message;
 
 
+use EasySwoole\Utility\File;
 use Psr\Http\Message\UploadedFileInterface;
 
 class UploadFile implements UploadedFileInterface
@@ -43,6 +44,7 @@ class UploadFile implements UploadedFileInterface
     public function moveTo($targetPath)
     {
         // TODO: Implement moveTo() method.
+        File::createDirectory(dirname($targetPath));
         return file_put_contents($targetPath,$this->stream) ? true :false;
     }
 
