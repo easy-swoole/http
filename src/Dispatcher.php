@@ -139,7 +139,7 @@ class Dispatcher
             }
         }catch (\Throwable $throwable){
             $this->router = false;
-            throw new RouterError("init Router error",$throwable->getCode(),$throwable);
+            throw $throwable;
         }
     }
 
