@@ -23,13 +23,9 @@ class Dispatcher
 {
     private $router = null;
     /**
-     * @var AbstractRouter
+     * @var AbstractRouter|null
      */
     private $routerRegister = null;
-    /**
-     * @var RouteCollector
-     */
-    private $extraRouterCollector = null;
     private $routerMethodNotAllowCallBack;
     private $routerNotFoundCallBack;
     private $globalModel;
@@ -62,23 +58,7 @@ class Dispatcher
         $this->httpExceptionHandler = $handler;
     }
 
-    /**
-     * @return false|null|AbstractRouter
-     */
-    function getRouterRegister()
-    {
-        return $this->routerRegister;
-    }
 
-    function setExtraRouterCollector(RouteCollector $collector)
-    {
-        $this->extraRouterCollector = $collector;
-    }
-
-    function getExtraRouterCollector()
-    {
-        return $this->extraRouterCollector;
-    }
 
     /**
      * @param mixed $routerMethodNotAllowCallBack
@@ -96,26 +76,29 @@ class Dispatcher
         $this->routerNotFoundCallBack = $routerNotFoundCallBack;
     }
 
-    public function setRouter(?GroupCountBased $based)
+    /**
+     * @return false|null|AbstractRouter
+     */
+    function getRouterRegister()
     {
-        $this->router = $based;
+        return $this->routerRegister;
     }
 
-    public function initRouter(?string $routerClass = null)
+    public function initRouter(?string $routerClass = null,bool $newInstance = false):?AbstractRouter
     {
+        if($this->routerRegister && !$newInstance){
+            return $this->routerRegister;
+        }
         if($routerClass){
             $class = $routerClass;
         }else{
             $class = $this->controllerNameSpacePrefix.'\\Router';
         }
         try{
-            $data = [];
-            //数据合并。全局的Router class设置的权限最高。
             if(class_exists($class)){
                 $ref = new \ReflectionClass($class);
                 if($ref->isSubclassOf(AbstractRouter::class)){
                     $this->routerRegister = $ref->newInstance();
-                    $data = $this->routerRegister->getRouteCollector()->getData();
                     if($this->routerRegister->getMethodNotAllowCallBack()){
                         $this->routerMethodNotAllowCallBack = $this->routerRegister->getMethodNotAllowCallBack();
                     }
@@ -128,19 +111,10 @@ class Dispatcher
                     throw new RouterError("class : {$class} not AbstractRouter class");
                 }
             }
-
-            if($this->extraRouterCollector){
-                $data = $data + $this->extraRouterCollector->getData();
-            }
-            if(!empty($data)){
-                $this->router = new GroupCountBased($data);
-            }else{
-                $this->router = false;
-            }
         }catch (\Throwable $throwable){
-            $this->router = false;
             throw $throwable;
         }
+        return $this->routerRegister;
     }
 
     public function dispatch(Request $request,Response $response):void
@@ -149,7 +123,17 @@ class Dispatcher
          * 进行一次初始化判定
          */
         if($this->router === null){
-            $this->initRouter();
+            $r = $this->initRouter();
+            if($r){
+                $data = $r->getRouteCollector()->getData();
+                if(!empty($data)){
+                    $this->router = new GroupCountBased($data);
+                }else{
+                    $this->router = false;
+                }
+            }else{
+                $this->router = false;
+            }
         }
         $path = UrlParser::pathInfo($request->getUri()->getPath());
         if($this->router instanceof GroupCountBased){
@@ -213,8 +197,8 @@ class Dispatcher
             }
         }
         response:{
-            $this->controllerHandler($request,$response,$path);
-        }
+        $this->controllerHandler($request,$response,$path);
+    }
     }
 
     private function controllerHandler(Request $request,Response $response,string $path)
