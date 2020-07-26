@@ -54,12 +54,14 @@ class Message implements MessageInterface
     public function hasHeader($name)
     {
         // TODO: Implement hasHeader() method.
+        $name = strtolower($name);
         return array_key_exists($name,$this->headers);
     }
 
     public function getHeader($name)
     {
         // TODO: Implement getHeader() method.
+        $name = strtolower($name);
         if(array_key_exists($name,$this->headers)){
             return $this->headers[$name];
         }else{
@@ -70,6 +72,7 @@ class Message implements MessageInterface
     public function getHeaderLine($name)
     {
         // TODO: Implement getHeaderLine() method.
+        $name = strtolower($name);
         if(array_key_exists($name,$this->headers)){
             return implode("; ",$this->headers[$name]);
         }else{
@@ -80,6 +83,7 @@ class Message implements MessageInterface
     public function withHeader($name, $value)
     {
         // TODO: Implement withHeader() method.
+        $name = strtolower($name);
         if(!is_array($value)){
             $value = [$value];
         }
@@ -93,6 +97,7 @@ class Message implements MessageInterface
     public function withAddedHeader($name, $value)
     {
         // TODO: Implement withAddedHeader() method.
+        $name = strtolower($name);
         if(!is_array($value)){
             $value = [$value];
         }
@@ -107,6 +112,7 @@ class Message implements MessageInterface
     public function withoutHeader($name)
     {
         // TODO: Implement withoutHeader() method.
+        $name = strtolower($name);
         if(isset($this->headers[$name])){
             unset($this->headers[$name]);
             return $this;
