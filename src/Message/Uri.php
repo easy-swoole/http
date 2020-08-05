@@ -15,7 +15,7 @@ class Uri implements UriInterface
 {
     private $host;
     private $userInfo;
-    private $port = 80;
+    private $port;
     private $path;
     private $query;
     private $fragment;
