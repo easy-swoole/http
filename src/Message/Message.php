@@ -31,13 +31,11 @@ class Message implements MessageInterface
 
     public function getProtocolVersion()
     {
-        // TODO: Implement getProtocolVersion() method.
         return $this->protocolVersion;
     }
 
     public function withProtocolVersion($version)
     {
-        // TODO: Implement withProtocolVersion() method.
         if($this->protocolVersion === $version){
             return $this;
         }
@@ -47,19 +45,16 @@ class Message implements MessageInterface
 
     public function getHeaders()
     {
-        // TODO: Implement getHeaders() method.
         return $this->headers;
     }
 
     public function hasHeader($name)
     {
-        // TODO: Implement hasHeader() method.
         return array_key_exists($name,$this->headers);
     }
 
     public function getHeader($name)
     {
-        // TODO: Implement getHeader() method.
         if(array_key_exists($name,$this->headers)){
             return $this->headers[$name];
         }else{
@@ -69,7 +64,6 @@ class Message implements MessageInterface
 
     public function getHeaderLine($name)
     {
-        // TODO: Implement getHeaderLine() method.
         if(array_key_exists($name,$this->headers)){
             return implode("; ",$this->headers[$name]);
         }else{
@@ -79,7 +73,6 @@ class Message implements MessageInterface
 
     public function withHeader($name, $value)
     {
-        // TODO: Implement withHeader() method.
         if(!is_array($value)){
             $value = [$value];
         }
@@ -92,7 +85,6 @@ class Message implements MessageInterface
 
     public function withAddedHeader($name, $value)
     {
-        // TODO: Implement withAddedHeader() method.
         if(!is_array($value)){
             $value = [$value];
         }
@@ -106,7 +98,6 @@ class Message implements MessageInterface
 
     public function withoutHeader($name)
     {
-        // TODO: Implement withoutHeader() method.
         if(isset($this->headers[$name])){
             unset($this->headers[$name]);
             return $this;
@@ -117,7 +108,6 @@ class Message implements MessageInterface
 
     public function getBody()
     {
-        // TODO: Implement getBody() method.
         if($this->body == null){
             $this->body = new Stream('');
         }
@@ -126,7 +116,6 @@ class Message implements MessageInterface
 
     public function withBody(StreamInterface $body)
     {
-        // TODO: Implement withBody() method.
         $this->body = $body;
         return $this;
     }

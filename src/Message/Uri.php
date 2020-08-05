@@ -24,11 +24,11 @@ class Uri implements UriInterface
     {
         if($url !== ''){
             $parts = parse_url($url);
-            $this->scheme = isset($parts['scheme']) ? $parts['scheme'] : '';
+            $this->scheme = isset($parts['scheme']) ? $parts['scheme'] : 'http';
             $this->userInfo = isset($parts['user']) ? $parts['user'] : '';
-            $this->host = isset($parts['host']) ? $parts['host'] : '';
+            $this->host = isset($parts['host']) ? $parts['host'] : '127.0.0.1';
             $this->port = isset($parts['port']) ? $parts['port'] : null;
-            $this->path = isset($parts['path']) ? $parts['path'] : '';
+            $this->path = isset($parts['path']) ? $parts['path'] : '/';
             $this->query = isset($parts['query']) ? $parts['query'] : '';
             $this->fragment = isset($parts['fragment']) ? $parts['fragment'] : '';
             if (isset($parts['pass'])) {
@@ -39,13 +39,11 @@ class Uri implements UriInterface
 
     public function getScheme()
     {
-        // TODO: Implement getScheme() method.
         return $this->scheme;
     }
 
     public function getAuthority()
     {
-        // TODO: Implement getAuthority() method.
         $authority = $this->host;
         if (!empty($this->userInfo)) {
             $authority = $this->userInfo . '@' . $authority;
@@ -58,43 +56,36 @@ class Uri implements UriInterface
 
     public function getUserInfo()
     {
-        // TODO: Implement getUserInfo() method.
         return $this->userInfo;
     }
 
     public function getHost()
     {
-        // TODO: Implement getHost() method.
         return $this->host;
     }
 
     public function getPort()
     {
-        // TODO: Implement getPort() method.
         return $this->port;
     }
 
     public function getPath()
     {
-        // TODO: Implement getPath() method.
         return $this->path;
     }
 
     public function getQuery()
     {
-        // TODO: Implement getQuery() method.
         return $this->query;
     }
 
     public function getFragment()
     {
-        // TODO: Implement getFragment() method.
         return $this->fragment;
     }
 
     public function withScheme($scheme)
     {
-        // TODO: Implement withScheme() method.
         if ($this->scheme === $scheme) {
             return $this;
         }
@@ -104,7 +95,6 @@ class Uri implements UriInterface
 
     public function withUserInfo($user, $password = null)
     {
-        // TODO: Implement withUserInfo() method.
         $info = $user;
         if ($password != '') {
             $info .= ':' . $password;
@@ -118,7 +108,6 @@ class Uri implements UriInterface
 
     public function withHost($host)
     {
-        // TODO: Implement withHost() method.
         $host = strtolower($host);
         if ($this->host === $host) {
             return $this;
@@ -129,7 +118,6 @@ class Uri implements UriInterface
 
     public function withPort($port)
     {
-        // TODO: Implement withPort() method.
         if ($this->port === $port) {
             return $this;
         }
@@ -139,7 +127,6 @@ class Uri implements UriInterface
 
     public function withPath($path)
     {
-        // TODO: Implement withPath() method.
         if ($this->path === $path) {
             return $this;
         }
@@ -149,7 +136,6 @@ class Uri implements UriInterface
 
     public function withQuery($query)
     {
-        // TODO: Implement withQuery() method.
         if ($this->query === $query) {
             return $this;
         }
@@ -159,7 +145,6 @@ class Uri implements UriInterface
 
     public function withFragment($fragment)
     {
-        // TODO: Implement withFragment() method.
         if ($this->fragment === $fragment) {
             return $this;
         }
@@ -169,9 +154,7 @@ class Uri implements UriInterface
 
     public function __toString()
     {
-        // TODO: Implement __toString() method.
         $uri = '';
-        // weak type checks to also accept null until we can add scalar type hints
         if ($this->scheme != '') {
             $uri .= $this->scheme . ':';
         }

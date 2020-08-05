@@ -31,20 +31,18 @@ class UploadFile implements UploadedFileInterface
         $this->clientMediaType = $clientMediaType;
     }
 
-    public function getTempName() {
-        // TODO: Implement getTempName() method.
+    public function getTempName()
+    {
         return $this->tempName;
     }
 
     public function getStream()
     {
-        // TODO: Implement getStream() method.
         return $this->stream;
     }
 
     public function moveTo($targetPath)
     {
-        // TODO: Implement moveTo() method.
         if (!(is_string($targetPath) && false === empty($targetPath))) {
             throw new FileException('Please provide a valid path');
         }
@@ -70,25 +68,21 @@ class UploadFile implements UploadedFileInterface
 
     public function getSize()
     {
-        // TODO: Implement getSize() method.
         return $this->size;
     }
 
     public function getError()
     {
-        // TODO: Implement getError() method.
         return $this->error;
     }
 
     public function getClientFilename()
     {
-        // TODO: Implement getClientFilename() method.
         return $this->clientFileName;
     }
 
     public function getClientMediaType()
     {
-        // TODO: Implement getClientMediaType() method.
         return $this->clientMediaType;
     }
 }

@@ -17,13 +17,11 @@ class Response extends Message implements ResponseInterface
     private $cookies = [];
     public function getStatusCode()
     {
-        // TODO: Implement getStatusCode() method.
         return $this->statusCode;
     }
 
     public function withStatus($code, $reasonPhrase = '')
     {
-        // TODO: Implement withStatus() method.
         if($code === $this->statusCode){
             return $this;
         }else{
@@ -39,7 +37,6 @@ class Response extends Message implements ResponseInterface
 
     public function getReasonPhrase()
     {
-        // TODO: Implement getReasonPhrase() method.
         return $this->reasonPhrase;
     }
 
