@@ -40,7 +40,7 @@ class Request extends ServerRequest
 
     function getRequestParam(...$key)
     {
-        $data = array_merge($this->getParsedBody(),$this->getQueryParams());;
+        $data = $this->getParsedBody() + $this->getQueryParams();
         if(empty($key)){
             return $data;
         }else{
@@ -138,28 +138,26 @@ class Request extends ServerRequest
 
     private function initCookie()
     {
-        return isset($this->request->cookie) ? $this->request->cookie : array();
+        return isset($this->request->cookie) ? $this->request->cookie : [];
     }
 
     private function initPost()
     {
-        return isset($this->request->post) ? $this->request->post : array();
+        return isset($this->request->post) ? $this->request->post : [];
     }
 
     private function initGet()
     {
-        return isset($this->request->get) ? $this->request->get : array();
+        return isset($this->request->get) ? $this->request->get : [];
     }
 
     final public function __toString():string
     {
-        // TODO: Implement __toString() method.
         return Utility::toString($this);
     }
 
     public function __destruct()
     {
-        // TODO: Implement __destruct() method.
         $this->getBody()->close();
     }
 
