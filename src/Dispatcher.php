@@ -26,9 +26,6 @@ class Dispatcher
      * @var AbstractRouter|null
      */
     private $routerRegister = null;
-    private $routerMethodNotAllowCallBack;
-    private $routerNotFoundCallBack;
-    private $globalModel;
     private $controllerNameSpacePrefix;
     private $maxDepth;
     private $maxPoolNum;
@@ -58,24 +55,6 @@ class Dispatcher
         $this->httpExceptionHandler = $handler;
     }
 
-
-
-    /**
-     * @param mixed $routerMethodNotAllowCallBack
-     */
-    public function setRouterMethodNotAllowCallBack($routerMethodNotAllowCallBack): void
-    {
-        $this->routerMethodNotAllowCallBack = $routerMethodNotAllowCallBack;
-    }
-
-    /**
-     * @param mixed $routerNotFoundCallBack
-     */
-    public function setRouterNotFoundCallBack($routerNotFoundCallBack): void
-    {
-        $this->routerNotFoundCallBack = $routerNotFoundCallBack;
-    }
-
     /**
      * @return false|null|AbstractRouter
      */
@@ -99,13 +78,6 @@ class Dispatcher
                 $ref = new \ReflectionClass($class);
                 if($ref->isSubclassOf(AbstractRouter::class)){
                     $this->routerRegister = $ref->newInstance();
-                    if($this->routerRegister->getMethodNotAllowCallBack()){
-                        $this->routerMethodNotAllowCallBack = $this->routerRegister->getMethodNotAllowCallBack();
-                    }
-                    if($this->routerRegister->getRouterNotFoundCallBack()){
-                        $this->routerNotFoundCallBack = $this->routerRegister->getRouterNotFoundCallBack();
-                    }
-                    $this->globalModel = $this->routerRegister->isGlobalMode();
                     $this->pathInfoMode = $this->routerRegister->isPathInfoMode();
                 }else{
                     throw new RouterError("class : {$class} not AbstractRouter class");
@@ -155,18 +127,18 @@ class Dispatcher
                         break;
                     }
                     case RouterDispatcher::METHOD_NOT_ALLOWED:{
-                        $handler = $this->routerMethodNotAllowCallBack;
+                        $handler = $this->routerRegister->getMethodNotAllowCallBack();
                         break;
                     }
                     case RouterDispatcher::NOT_FOUND:
                     default:{
-                        $handler = $this->routerNotFoundCallBack;
+                        $handler = $this->routerRegister->getRouterNotFoundCallBack();
                         break;
                     }
                 }
             }
             //如果handler不为null，那么说明，非为 \FastRoute\Dispatcher::FOUND ，因此执行
-            if(is_callable($handler)){
+            if(is_callable($handler) && $this->routerRegister->isGlobalMode()){
                 try{
                     //若直接返回一个url path
                     $ret = call_user_func($handler,$request,$response);
@@ -192,7 +164,7 @@ class Dispatcher
             /*
                 * 全局模式的时候，都拦截。非全局模式，否则继续往下
             */
-            if($this->globalModel){
+            if($this->routerRegister->isGlobalMode()){
                 return;
             }
         }
