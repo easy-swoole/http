@@ -75,7 +75,11 @@ class Response extends MessageResponse
 
     function write(string $str){
         if(!$this->isEndResponse()){
-            $this->getBody()->write($str);
+            if ($this->isChunk){
+                $this->getSwooleResponse()->write($str);
+            }else{
+                $this->getBody()->write($str);
+            }
             return true;
         }else{
             return false;
