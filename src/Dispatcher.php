@@ -114,7 +114,7 @@ class Dispatcher
                 }
             }
             //如果handler不为null，那么说明，非为 \FastRoute\Dispatcher::FOUND ，因此执行
-            if(is_callable($handler) && $this->routerRegister->isGlobalMode()){
+            if(is_callable($handler)){
                 try{
                     //若直接返回一个url path
                     $ret = call_user_func($handler,$request,$response);
@@ -135,7 +135,6 @@ class Dispatcher
             }else if(is_string($handler)){
                 $path = UrlParser::pathInfo($handler);
                 $request->getUri()->withPath($path);
-                goto response;
             }
             /*
                 * 全局模式的时候，都拦截。非全局模式，否则继续往下
