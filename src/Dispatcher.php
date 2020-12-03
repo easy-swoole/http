@@ -136,15 +136,12 @@ class Dispatcher
                     $request->getUri()->withPath($path);
                 }
             }
-
             //全局模式的时候，都拦截。非全局模式，否则继续往下
             if($this->routerRegister->isGlobalMode()){
                 return;
             }
         }
-        response:{
         $this->controllerExecutor($request,$response,$path);
-    }
     }
 
     private function controllerExecutor(Request $request, Response $response, string $path)
