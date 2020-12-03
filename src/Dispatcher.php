@@ -112,33 +112,32 @@ class Dispatcher
                         break;
                     }
                 }
-            }
-            //如果handler不为null，那么说明，非为 \FastRoute\Dispatcher::FOUND ，因此执行
-            if(is_callable($handler)){
-                try{
-                    //若直接返回一个url path
-                    $ret = call_user_func($handler,$request,$response);
-                    if(is_string($ret)){
-                        $path = UrlParser::pathInfo($ret);
-                    }else if($ret == false){
+                //如果handler不为null，那么说明，非为 \FastRoute\Dispatcher::FOUND ，因此执行
+                if(is_callable($handler)){
+                    try{
+                        //若直接返回一个url path
+                        $ret = call_user_func($handler,$request,$response);
+                        if(is_string($ret)){
+                            $path = UrlParser::pathInfo($ret);
+                        }else if($ret == false){
+                            return;
+                        }else{
+                            //可能在回调中重写了URL PATH
+                            $path = UrlParser::pathInfo($request->getUri()->getPath());
+                        }
+                        $request->getUri()->withPath($path);
+                    }catch (\Throwable $throwable){
+                        $this->onException($throwable,$request,$response);
+                        //出现异常的时候，不在往下dispatch
                         return;
-                    }else{
-                        //可能在回调中重写了URL PATH
-                        $path = UrlParser::pathInfo($request->getUri()->getPath());
                     }
+                }else if(is_string($handler)){
+                    $path = UrlParser::pathInfo($handler);
                     $request->getUri()->withPath($path);
-                }catch (\Throwable $throwable){
-                    $this->onException($throwable,$request,$response);
-                    //出现异常的时候，不在往下dispatch
-                    return;
                 }
-            }else if(is_string($handler)){
-                $path = UrlParser::pathInfo($handler);
-                $request->getUri()->withPath($path);
             }
-            /*
-                * 全局模式的时候，都拦截。非全局模式，否则继续往下
-            */
+
+            //全局模式的时候，都拦截。非全局模式，否则继续往下
             if($this->routerRegister->isGlobalMode()){
                 return;
             }
