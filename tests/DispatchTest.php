@@ -72,6 +72,7 @@ class DispatchTest extends TestCase
             $router->setPathInfoMode(false);
             $router->setRouterNotFoundCallBack(function (Request $request, Response $response) {
                 $response->withStatus(404)->write('router not found');
+                return false;
             });
         });
         $this->dispatcherWithRouter->dispatch($this->getRequest('/index', 'GET'), $response);
