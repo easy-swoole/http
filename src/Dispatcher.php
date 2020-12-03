@@ -113,8 +113,9 @@ class Dispatcher
                     }
                 }
             }
+
             //如果handler不为null，那么说明，非为 \FastRoute\Dispatcher::FOUND ，因此执行
-            if(is_callable($handler) && $this->routerRegister->isGlobalMode()){
+            if(is_callable($handler)){
                 try{
                     //若直接返回一个url path
                     $ret = call_user_func($handler,$request,$response);
