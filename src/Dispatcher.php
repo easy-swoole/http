@@ -115,17 +115,13 @@ class Dispatcher
                 //如果handler不为null，那么说明，非为 \FastRoute\Dispatcher::FOUND ，因此执行
                 if(is_callable($handler)){
                     try{
-                        //若直接返回一个url path
                         $ret = call_user_func($handler,$request,$response);
                         if(is_string($ret)){
                             $path = UrlParser::pathInfo($ret);
+                            $request->getUri()->withPath($path);
                         }else if($ret == false){
                             return;
-                        }else{
-                            //可能在回调中重写了URL PATH
-                            $path = UrlParser::pathInfo($request->getUri()->getPath());
                         }
-                        $request->getUri()->withPath($path);
                     }catch (\Throwable $throwable){
                         $this->onException($throwable,$request,$response);
                         //出现异常的时候，不在往下dispatch
