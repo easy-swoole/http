@@ -72,3 +72,5 @@ $http->start();
 ```
 
 ## 动态路由匹配规则
+
+![Dispatcher](./tests/dispatcher.jpg)

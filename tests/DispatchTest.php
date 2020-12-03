@@ -147,6 +147,43 @@ class DispatchTest extends TestCase
         $this->assertEquals('the route is add index', $response->getBody()->__toString());
     }
 
+    public function testRedirect()
+    {
+        $this->reset();
+        $response = new Response();
+        $this->dispatcherWithRouter->setOnRouterCreate(function (AbstractRouter $router) {
+            $router->setRouterNotFoundCallBack(function (Request $request, Response $response) {
+                $response->withStatus(404)->write('the 404-');
+            });
+        });
+        $this->dispatcherWithRouter->dispatch($this->getRequest('/index/test'), $response);
+        $this->assertEquals(404, $response->getStatusCode());
+        $this->assertEquals('the 404-test-404', $response->getBody()->__toString());
+
+        $this->reset();
+        $response = new Response();
+        $this->dispatcherWithRouter->setOnRouterCreate(function (AbstractRouter $router) {
+            $router->setRouterNotFoundCallBack(function (Request $request, Response $response) {
+                $response->withStatus(404)->write('the 404-');
+                return false;
+            });
+        });
+        $this->dispatcherWithRouter->dispatch($this->getRequest('/index/test'), $response);
+        $this->assertEquals(404, $response->getStatusCode());
+        $this->assertEquals('the 404-', $response->getBody()->__toString());
+
+        $this->reset();
+        $response = new Response();
+        $this->dispatcherWithRouter->setOnRouterCreate(function (AbstractRouter $router) {
+            $router->setRouterNotFoundCallBack(function (Request $request, Response $response) {
+                return '/index/index';
+            });
+        });
+        $this->dispatcherWithRouter->dispatch($this->getRequest('/index/test'), $response);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('index', $response->getBody()->__toString());
+    }
+
     private function reset()
     {
         $this->dispatcher = new Dispatcher('EasySwoole\Http\Tests\Controller');
