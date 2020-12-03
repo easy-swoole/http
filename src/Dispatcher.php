@@ -16,7 +16,6 @@ use EasySwoole\Http\Exception\RouterError;
 use EasySwoole\Http\Message\Status;
 use FastRoute\Dispatcher\GroupCountBased;
 use FastRoute\Dispatcher as RouterDispatcher;
-use FastRoute\RouteCollector;
 use Swoole\Coroutine\Channel;
 
 class Dispatcher
@@ -26,77 +25,51 @@ class Dispatcher
      * @var AbstractRouter|null
      */
     private $routerRegister = null;
+    private $controllerPoolCreateNum = [];
+    //以下为外部配置项目
     private $controllerNameSpacePrefix;
     private $maxDepth;
     private $maxPoolNum;
-    private $controllerPoolCreateNum = [];
     private $httpExceptionHandler = null;
     private $controllerPoolWaitTime = 5.0;
-    private $pathInfoMode = true;
+    /** @var callable */
+    private $onRouterCreate;
 
-    function __construct(string $controllerNameSpace,int $maxDepth = 5,int $maxPoolNum = 200)
+    function __construct(string $controllerNameSpace = null,int $maxDepth = 5,int $maxPoolNum = 200)
     {
-        $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
+        if($controllerNameSpace !== null){
+            $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
+        }
         $this->maxPoolNum = $maxPoolNum;
         $this->maxDepth = $maxDepth;
     }
 
-    /**
-     * @param float $controllerPoolWaitTime
-     */
-    public function setControllerPoolWaitTime(float $controllerPoolWaitTime): void
+    public function setControllerPoolWaitTime(float $controllerPoolWaitTime):Dispatcher
     {
         $this->controllerPoolWaitTime = $controllerPoolWaitTime;
+        return $this;
     }
 
+    function setOnRouterCreate(callable $call):Dispatcher
+    {
+        $this->onRouterCreate = $call;
+        return $this;
+    }
 
-    function setHttpExceptionHandler(callable $handler):void
+    function setHttpExceptionHandler(callable $handler):Dispatcher
     {
         $this->httpExceptionHandler = $handler;
-    }
-
-    /**
-     * @return false|null|AbstractRouter
-     */
-    function getRouterRegister()
-    {
-        return $this->routerRegister;
-    }
-
-    public function initRouter(?string $routerClass = null,bool $newInstance = false):?AbstractRouter
-    {
-        if($this->routerRegister && !$newInstance){
-            return $this->routerRegister;
-        }
-        if($routerClass){
-            $class = $routerClass;
-        }else{
-            $class = $this->controllerNameSpacePrefix.'\\Router';
-        }
-        try{
-            if(class_exists($class)){
-                $ref = new \ReflectionClass($class);
-                if($ref->isSubclassOf(AbstractRouter::class)){
-                    $this->routerRegister = $ref->newInstance();
-                    $this->pathInfoMode = $this->routerRegister->isPathInfoMode();
-                }else{
-                    throw new RouterError("class : {$class} not AbstractRouter class");
-                }
-            }
-        }catch (\Throwable $throwable){
-            throw $throwable;
-        }
-        return $this->routerRegister;
+        return $this;
     }
 
     public function dispatch(Request $request,Response $response):void
     {
-        /*
-         * 进行一次初始化判定
-         */
+        // 进行一次初始化判定
         if($this->router === null){
-            $r = $this->initRouter();
-            if($r){
+            $r = $this->initRouter( $this->controllerNameSpacePrefix.'\\Router');
+            if($r instanceof AbstractRouter){
+                call_user_func($this->onRouterCreate,$r);
+                $this->routerRegister = $r;
                 $data = $r->getRouteCollector()->getData();
                 if(!empty($data)){
                     $this->router = new GroupCountBased($data);
@@ -107,9 +80,10 @@ class Dispatcher
                 $this->router = false;
             }
         }
+
         $path = UrlParser::pathInfo($request->getUri()->getPath());
         if($this->router instanceof GroupCountBased){
-            if($this->pathInfoMode){
+            if($this->routerRegister->isPathInfoMode()){
                 $routerPath = $path;
             }else{
                 $routerPath = $request->getUri()->getPath();
@@ -152,7 +126,7 @@ class Dispatcher
                     }
                     $request->getUri()->withPath($path);
                 }catch (\Throwable $throwable){
-                    $this->hookThrowable($throwable,$request,$response);
+                    $this->onException($throwable,$request,$response);
                     //出现异常的时候，不在往下dispatch
                     return;
                 }
@@ -169,11 +143,11 @@ class Dispatcher
             }
         }
         response:{
-        $this->controllerHandler($request,$response,$path);
+        $this->controllerExecutor($request,$response,$path);
     }
     }
 
-    private function controllerHandler(Request $request,Response $response,string $path)
+    private function controllerExecutor(Request $request, Response $response, string $path)
     {
         $pathInfo = ltrim($path,"/");
         $list = explode("/",$pathInfo);
@@ -209,7 +183,7 @@ class Dispatcher
             try{
                 $controllerObject = $this->getController($finalClass);
             }catch (\Throwable $throwable){
-                $this->hookThrowable($throwable,$request,$response);
+                $this->onException($throwable,$request,$response);
                 return;
             }
             if($controllerObject instanceof Controller){
@@ -221,17 +195,28 @@ class Dispatcher
                         $this->dispatch($request,$response);
                     }
                 }catch (\Throwable $throwable){
-                    $this->hookThrowable($throwable,$request,$response);
+                    $this->onException($throwable,$request,$response);
                 }finally {
                     $this->recycleController($finalClass,$controllerObject);
                 }
             }else{
                 $throwable = new ControllerPoolEmpty('controller pool empty for '.$finalClass);
-                $this->hookThrowable($throwable,$request,$response);
+                $this->onException($throwable,$request,$response);
             }
         }else{
             $response->withStatus(404);
             $response->write("not controller class match");
+        }
+    }
+
+
+    protected function onException(\Throwable $throwable, Request $request, Response $response)
+    {
+        if(is_callable($this->httpExceptionHandler)){
+            call_user_func($this->httpExceptionHandler,$throwable,$request,$response);
+        }else{
+            $response->withStatus(Status::CODE_INTERNAL_SERVER_ERROR);
+            $response->write(nl2br($throwable->getMessage()."\n".$throwable->getTraceAsString()));
         }
     }
 
@@ -263,7 +248,12 @@ class Dispatcher
         return $channel->pop($this->controllerPoolWaitTime);
     }
 
-    protected function recycleController(string $class,Controller $obj)
+    private function generateClassKey(string $class):string
+    {
+        return substr(md5($class), 8, 16);
+    }
+
+    private function recycleController(string $class,Controller $obj)
     {
         $classKey = $this->generateClassKey($class);
         /** @var Channel $channel */
@@ -271,18 +261,17 @@ class Dispatcher
         $channel->push($obj);
     }
 
-    protected function hookThrowable(\Throwable $throwable,Request $request,Response $response)
+    protected function initRouter(?string $class = null):?AbstractRouter
     {
-        if(is_callable($this->httpExceptionHandler)){
-            call_user_func($this->httpExceptionHandler,$throwable,$request,$response);
+        if(class_exists($class)){
+            $ref = new \ReflectionClass($class);
+            if($ref->isSubclassOf(AbstractRouter::class)){
+                return $ref->newInstance();
+            }else{
+                throw new RouterError("class : {$class} not AbstractRouter class");
+            }
         }else{
-            $response->withStatus(Status::CODE_INTERNAL_SERVER_ERROR);
-            $response->write(nl2br($throwable->getMessage()."\n".$throwable->getTraceAsString()));
+            return null;
         }
-    }
-
-    protected function generateClassKey(string $class):string
-    {
-        return substr(md5($class), 8, 16);
     }
 }
