@@ -68,7 +68,9 @@ class Dispatcher
         if($this->router === null){
             $r = $this->initRouter( $this->controllerNameSpacePrefix.'\\Router');
             if($r instanceof AbstractRouter){
-                call_user_func($this->onRouterCreate,$r);
+                if (is_callable($this->onRouterCreate)) {
+                    call_user_func($this->onRouterCreate,$r);
+                }
                 $this->routerRegister = $r;
                 $data = $r->getRouteCollector()->getData();
                 if(!empty($data)){
