@@ -27,7 +27,7 @@ class Dispatcher
     private $routerRegister = null;
     private $controllerPoolCreateNum = [];
     //以下为外部配置项目
-    private $controllerNameSpacePrefix;
+    private $namespacePrefix;
     private $maxDepth;
     private $maxPoolNum;
     private $httpExceptionHandler = null;
@@ -35,13 +35,18 @@ class Dispatcher
     /** @var callable */
     private $onRouterCreate;
 
-    function __construct(string $controllerNameSpace = null,int $maxDepth = 5,int $maxPoolNum = 200)
+    function __construct(string $namespacePrefix = null,int $maxDepth = 5,int $maxPoolNum = 200)
     {
-        if($controllerNameSpace !== null){
-            $this->controllerNameSpacePrefix = trim($controllerNameSpace,'\\');
+        if($namespacePrefix !== null){
+            $this->namespacePrefix = trim($namespacePrefix,'\\');
         }
         $this->maxPoolNum = $maxPoolNum;
         $this->maxDepth = $maxDepth;
+    }
+
+    function setNamespacePrefix(string $space)
+    {
+        $this->namespacePrefix = trim($space,'\\');
     }
 
     public function setControllerPoolWaitTime(float $controllerPoolWaitTime):Dispatcher
@@ -66,7 +71,7 @@ class Dispatcher
     {
         // 进行一次初始化判定
         if($this->router === null){
-            $r = $this->initRouter( $this->controllerNameSpacePrefix.'\\Router');
+            $r = $this->initRouter( $this->namespacePrefix.'\\Router');
             if($r instanceof AbstractRouter){
                 if (is_callable($this->onRouterCreate)) {
                     call_user_func($this->onRouterCreate,$r);
@@ -154,16 +159,16 @@ class Dispatcher
             for ($i=0 ;$i<$maxDepth;$i++){
                 $className = $className."\\".ucfirst($list[$i] ?: 'Index');//为一级控制器Index服务
             }
-            if(class_exists($this->controllerNameSpacePrefix.$className)){
+            if(class_exists($this->namespacePrefix.$className)){
                 //尝试获取该class后的actionName
                 $actionName = empty($list[$i]) ? 'index' : $list[$i];
-                $finalClass = $this->controllerNameSpacePrefix.$className;
+                $finalClass = $this->namespacePrefix.$className;
                 break;
             }else{
                 //尝试搜搜index控制器
                 $temp = $className."\\Index";
-                if(class_exists($this->controllerNameSpacePrefix.$temp)){
-                    $finalClass = $this->controllerNameSpacePrefix.$temp;
+                if(class_exists($this->namespacePrefix.$temp)){
+                    $finalClass = $this->namespacePrefix.$temp;
                     //尝试获取该class后的actionName
                     $actionName = empty($list[$i]) ? 'index' : $list[$i];
                     break;
