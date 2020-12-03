@@ -119,7 +119,7 @@ class Dispatcher
                         if(is_string($ret)){
                             $path = UrlParser::pathInfo($ret);
                             $request->getUri()->withPath($path);
-                        }else if($ret == false){
+                        }else if($ret === false){
                             return;
                         }
                     }catch (\Throwable $throwable){
