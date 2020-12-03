@@ -12,6 +12,7 @@ namespace EasySwoole\Http;
 use EasySwoole\Http\AbstractInterface\AbstractRouter;
 use EasySwoole\Http\AbstractInterface\Controller;
 use EasySwoole\Http\Exception\ControllerPoolEmpty;
+use EasySwoole\Http\Exception\Exception;
 use EasySwoole\Http\Exception\RouterError;
 use EasySwoole\Http\Message\Status;
 use FastRoute\Dispatcher\GroupCountBased;
@@ -124,6 +125,7 @@ class Dispatcher
                         if(is_string($ret)){
                             $path = UrlParser::pathInfo($ret);
                             $request->getUri()->withPath($path);
+                            goto execController;
                         }else if($ret === false){
                             return;
                         }
@@ -135,6 +137,7 @@ class Dispatcher
                 }else if(is_string($handler)){
                     $path = UrlParser::pathInfo($handler);
                     $request->getUri()->withPath($path);
+                    goto execController;
                 }
             }
             //全局模式的时候，都拦截。非全局模式，否则继续往下
@@ -142,7 +145,10 @@ class Dispatcher
                 return;
             }
         }
-        $this->controllerExecutor($request,$response,$path);
+        execController:{
+            $this->controllerExecutor($request,$response,$path);
+        }
+
     }
 
     private function controllerExecutor(Request $request, Response $response, string $path)
