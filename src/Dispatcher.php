@@ -12,7 +12,6 @@ namespace EasySwoole\Http;
 use EasySwoole\Http\AbstractInterface\AbstractRouter;
 use EasySwoole\Http\AbstractInterface\Controller;
 use EasySwoole\Http\Exception\ControllerPoolEmpty;
-use EasySwoole\Http\Exception\Exception;
 use EasySwoole\Http\Exception\RouterError;
 use EasySwoole\Http\Message\Status;
 use FastRoute\Dispatcher\GroupCountBased;
@@ -45,9 +44,10 @@ class Dispatcher
         $this->maxDepth = $maxDepth;
     }
 
-    function setNamespacePrefix(string $space)
+    function setNamespacePrefix(string $space):Dispatcher
     {
         $this->namespacePrefix = trim($space,'\\');
+        return $this;
     }
 
     public function setControllerPoolWaitTime(float $controllerPoolWaitTime):Dispatcher
@@ -65,6 +65,12 @@ class Dispatcher
     function setHttpExceptionHandler(callable $handler):Dispatcher
     {
         $this->httpExceptionHandler = $handler;
+        return $this;
+    }
+
+    function setMaxDepth($depth):Dispatcher
+    {
+        $this->maxDepth = $depth;
         return $this;
     }
 
