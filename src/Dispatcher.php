@@ -56,6 +56,12 @@ class Dispatcher
         return $this;
     }
 
+    public function setControllerMaxPoolNum(int $num):Dispatcher
+    {
+        $this->maxPoolNum = $num;
+        return $this;
+    }
+
     function setOnRouterCreate(callable $call):Dispatcher
     {
         $this->onRouterCreate = $call;
