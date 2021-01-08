@@ -20,27 +20,33 @@ class GlobalParamHook
     private $cookieHttponly = false;
     private $cookieSamesite = '';
     
-    function setCookieExpire(int $expire){
+    function setCookieExpire(int $expire)
+    {
         $this->cookieExpire = $expire;
     }
     
-    function setCookiePath(string $path){
+    function setCookiePath(string $path)
+    {
         $this->cookiePath = $path;
     }
     
-    function setCookieDomain(string $domain){
+    function setCookieDomain(string $domain)
+    {
         $this->cookieDomain = $domain;
     }
     
-    function setCookieSecure(bool $secure){
+    function setCookieSecure(bool $secure)
+    {
         $this->cookieSecure = $secure;
     }
     
-    function setCookieHttponly(bool $httponly){
+    function setCookieHttponly(bool $httponly)
+    {
         $this->cookieHttponly = $httponly;
     }
     
-    function setCookieSamesite(string $cookieSamesite){
+    function setCookieSamesite(string $cookieSamesite)
+    {
         $this->cookieSamesite = $cookieSamesite;
     }
     
