@@ -5,7 +5,6 @@ namespace EasySwoole\Http;
 
 
 use EasySwoole\Component\Singleton;
-use EasySwoole\Session\Session;
 use EasySwoole\Spl\SplContextArray;
 
 class GlobalParamHook
@@ -45,12 +44,12 @@ class GlobalParamHook
         $this->cookieSamesite = $cookieSamesite;
     }
     
-    function addOnRequest(callable $call)
+    function setOnRequest(callable $call)
     {
         $this->onRequest[] = $call;
     }
 
-    function addAfterRequest(callable $call)
+    function setAfterRequest(callable $call)
     {
         $this->afterRequest[] = $call;
     }
@@ -69,7 +68,7 @@ class GlobalParamHook
         }
     }
 
-    function hookDefault()
+    function hook()
     {
         global $_GET;
         if(!$_GET instanceof SplContextArray){
@@ -91,18 +90,22 @@ class GlobalParamHook
         if(!$_SERVER instanceof SplContextArray){
             $_SERVER = new SplContextArray();
         }
-        $this->addOnRequest(function (Request $request){
+        $this->setOnRequest(function (Request $request){
             global $_GET;
+            /** @var $_GET SplContextArray */
             $_GET->loadArray($request->getQueryParams());
             global $_COOKIE;
+            /** @var $_COOKIE SplContextArray */
             $_COOKIE->loadArray($request->getCookieParams());
             global $_POST;
+            /** @var $_POST SplContextArray */
             $_POST->loadArray($request->getParsedBody());
             global $_FILES;
             $files = [];
             if(!empty($request->getSwooleRequest()->files)){
                 $files = $request->getSwooleRequest()->files;
             }
+            /** @var $_FILES SplContextArray */
             $_FILES->loadArray($files);
             global $_SERVER;
             $server = [];
@@ -112,31 +115,9 @@ class GlobalParamHook
             foreach ($request->getSwooleRequest()->server as $key => $value) {
                 $server[strtoupper(str_replace('-', '_', $key))] = $value;
             }
+            /** @var $_SERVER SplContextArray */
             $_SERVER->loadArray($server);
         });
         return $this;
-    }
-
-    function hookSession(\SessionHandlerInterface $handler,$sessionName = 'easy_swoole_sess',string $savePath = '/')
-    {
-        global $_SESSION;
-        $_SESSION = null;
-        $_SESSION = Session::getInstance($handler,$sessionName,$savePath)->getContextArray();
-        $_SESSION->setOnContextCreate(function (SplContextArray $contextArray){
-            $contextArray->loadArray(Session::getInstance()->all());
-        });
-        Session::getInstance()->setOnStart(function (){
-            global $_SESSION;
-            $_SESSION->loadArray(Session::getInstance()->all());
-        });
-        $this->addOnRequest(function (Request $request,Response $response)use($sessionName){
-            $cookie = $request->getCookieParams($sessionName);
-            if(empty($cookie)){
-                $sid = Session::getInstance()->sessionId();
-                $response->setCookie($sessionName,$sid,$this->cookieExpire,$this->cookiePath,$this->cookieDomain,$this->cookieSecure,$this->cookieHttponly,$this->cookieSamesite);
-            }else{
-                Session::getInstance()->sessionId($cookie);
-            }
-        });
     }
 }
