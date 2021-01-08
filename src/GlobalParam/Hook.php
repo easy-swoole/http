@@ -6,6 +6,7 @@ namespace EasySwoole\Http\GlobalParam;
 
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
+use EasySwoole\Session\Session;
 use EasySwoole\Spl\SplContextArray;
 
 class Hook
@@ -13,17 +14,11 @@ class Hook
     protected $session;
     protected $sessionConfig;
 
-
-    protected $config;
-
-    public function __construct()
+    public function enableSession(Session $session):SessionConfig
     {
-        $this->config = new Config();
-    }
-
-    public function getConfig():Config
-    {
-        return $this->config;
+        $this->session = $session;
+        $this->sessionConfig = new SessionConfig();
+        return $this->sessionConfig;
     }
 
     public function register()
@@ -48,7 +43,7 @@ class Hook
         if(!$_SERVER instanceof SplContextArray){
             $_SERVER = new SplContextArray();
         }
-        if ($this->getConfig()->getSession()){
+        if ($this->session){
             global $_SESSION;
             if(!$_SESSION instanceof SplContextArray){
                 $_SESSION = new SplContextArray();
@@ -84,11 +79,10 @@ class Hook
         }
         /** @var $_SERVER SplContextArray */
         $_SERVER->loadArray($server);
-        if ($this->getConfig()->getSession()){
+        if ($this->session){
+            /** @var $_SESSION SplContextArray */
             global $_SESSION;
-            if(!$_SESSION instanceof SplContextArray){
-                $_SESSION = new SplContextArray();
-            }
+
         }
     }
 }

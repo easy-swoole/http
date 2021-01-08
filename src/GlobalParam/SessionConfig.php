@@ -3,11 +3,9 @@
 
 namespace EasySwoole\Http\GlobalParam;
 
-
-use EasySwoole\Session\Session;
 use EasySwoole\Spl\SplBean;
 
-class Config extends SplBean
+class SessionConfig extends SplBean
 {
     protected $cookieExpire = 0;
     protected $cookiePath = '/';
@@ -15,22 +13,14 @@ class Config extends SplBean
     protected $cookieSecure = false;
     protected $cookieHttponly = false;
     protected $cookieSameSite = '';
-    protected $session;
-    protected $sessionName;
-
-    public function enableSession(Session $session,string $sessionName = 'es_session'):Config
-    {
-        $this->session = $session;
-        $this->sessionName = $sessionName;
-        return $this;
-    }
+    protected $sessionName = 'es_session';
 
     public function getCookieExpire(): int
     {
         return $this->cookieExpire;
     }
 
-    public function setCookieExpire(int $cookieExpire): Config
+    public function setCookieExpire(int $cookieExpire): SessionConfig
     {
         $this->cookieExpire = $cookieExpire;
         return $this;
@@ -41,7 +31,7 @@ class Config extends SplBean
         return $this->cookiePath;
     }
 
-    public function setCookiePath(string $cookiePath): Config
+    public function setCookiePath(string $cookiePath): SessionConfig
     {
         $this->cookiePath = $cookiePath;
         return $this;
@@ -52,7 +42,7 @@ class Config extends SplBean
         return $this->cookieDomain;
     }
 
-    public function setCookieDomain(string $cookieDomain): Config
+    public function setCookieDomain(string $cookieDomain): SessionConfig
     {
         $this->cookieDomain = $cookieDomain;
         return $this;
@@ -63,7 +53,7 @@ class Config extends SplBean
         return $this->cookieSecure;
     }
 
-    public function setCookieSecure(bool $cookieSecure): Config
+    public function setCookieSecure(bool $cookieSecure): SessionConfig
     {
         $this->cookieSecure = $cookieSecure;
         return $this;
@@ -74,7 +64,7 @@ class Config extends SplBean
         return $this->cookieHttponly;
     }
 
-    public function setCookieHttponly(bool $cookieHttponly): Config
+    public function setCookieHttponly(bool $cookieHttponly): SessionConfig
     {
         $this->cookieHttponly = $cookieHttponly;
         return $this;
@@ -85,40 +75,24 @@ class Config extends SplBean
         return $this->cookieSameSite;
     }
 
-    public function setCookieSameSite(string $cookieSameSite): Config
+    public function setCookieSameSite(string $cookieSameSite): SessionConfig
     {
         $this->cookieSameSite = $cookieSameSite;
         return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getSession()
-    {
-        return $this->session;
-    }
-
-    /**
-     * @param mixed $session
-     */
-    public function setSession($session): void
-    {
-        $this->session = $session;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getSessionName()
+    public function getSessionName(): string
     {
         return $this->sessionName;
     }
 
     /**
-     * @param mixed $sessionName
+     * @param string $sessionName
      */
-    public function setSessionName($sessionName): void
+    public function setSessionName(string $sessionName): void
     {
         $this->sessionName = $sessionName;
     }
