@@ -8,10 +8,14 @@ use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 use EasySwoole\Session\Session;
 use EasySwoole\Spl\SplContextArray;
+use EasySwoole\Utility\Random;
+use Swoole\Coroutine;
 
 class Hook
 {
+    /** @var Session */
     protected $session;
+    /** @var SessionConfig */
     protected $sessionConfig;
 
     public function enableSession(Session $session):SessionConfig
@@ -82,7 +86,19 @@ class Hook
         if ($this->session){
             /** @var $_SESSION SplContextArray */
             global $_SESSION;
-
+            $sid = $request->getCookieParams($this->sessionConfig->getSessionName());
+            if(empty($sid)){
+                $sid = Random::makeUUIDV4();
+                $response->setCookie($this->sessionConfig->getSessionName(),$sid);
+            }
+            $context = $this->session->create($sid);
+            $_SESSION->loadArray($context->allContext());
+            Coroutine::defer(function ()use($context,$sid){
+                /** @var $_SESSION SplContextArray */
+                global $_SESSION;
+                $context->setData($_SESSION->toArray());
+                $this->session->close($sid);
+            });
         }
     }
 }
