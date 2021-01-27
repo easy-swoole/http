@@ -4,6 +4,7 @@
 namespace EasySwoole\Http\GlobalParam;
 
 
+use EasySwoole\Component\Context\ContextManager;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 use EasySwoole\Session\Session;
@@ -13,6 +14,7 @@ use Swoole\Coroutine;
 
 class Hook
 {
+    const SESSION_CONTEXT = '_SESSION_CONTEXT_';
     /** @var Session */
     protected $session;
     /** @var SessionConfig */
@@ -92,12 +94,18 @@ class Hook
                 $response->setCookie($this->sessionConfig->getSessionName(),$sid);
             }
             $context = $this->session->create($sid);
+            ContextManager::getInstance()->set(self::SESSION_CONTEXT,$context);
             $_SESSION->loadArray($context->allContext());
             Coroutine::defer(function ()use($context,$sid){
                 /** @var $_SESSION SplContextArray */
                 global $_SESSION;
-                $context->setData($_SESSION->toArray());
-                $this->session->close($sid);
+                try{
+                    $context->setData($_SESSION->toArray());
+                }catch (\Throwable $throwable){
+                    throw $throwable;
+                } finally {
+                    $this->session->close($sid);
+                }
             });
         }
     }
