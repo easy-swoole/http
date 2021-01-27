@@ -86,7 +86,7 @@ class Response extends MessageResponse
         }
     }
 
-    function redirect($url,$status = Status::CODE_MOVED_TEMPORARILY)
+    function redirect($url,$status = Status::CODE_MOVED_TEMPORARILY):bool
     {
         if(!$this->isEndResponse()){
             //仅支持header重定向  不做meta定向
