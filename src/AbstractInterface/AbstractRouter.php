@@ -14,6 +14,9 @@ use FastRoute\RouteParser\Std;
 
 abstract class AbstractRouter
 {
+    const INJECT_PARAMS_IN_GET = 1;
+    const INJECT_PARAMS_IN_CONTEXT = 2;
+
     private $routeCollector;
     private $methodNotAllowCallBack = null;
     private $routerNotFoundCallBack = null;
@@ -91,5 +94,10 @@ abstract class AbstractRouter
     public function setGlobalMode(bool $globalMode): void
     {
         $this->globalMode = $globalMode;
+    }
+
+    public function injectParams(?int $injectWay = null)
+    {
+
     }
 }
