@@ -9,6 +9,7 @@
 namespace EasySwoole\Http;
 
 
+use EasySwoole\Component\Context\ContextManager;
 use EasySwoole\Http\AbstractInterface\AbstractRouter;
 use EasySwoole\Http\AbstractInterface\Controller;
 use EasySwoole\Http\Exception\ControllerPoolEmpty;
@@ -114,10 +115,31 @@ class Dispatcher
                 switch ($routeInfo[0]) {
                     case RouterDispatcher::FOUND:{
                         $handler = $routeInfo[1];
+                        $inject = $this->routerRegister->parseParams();
                         //合并解析出来的数据
-                        $vars = $routeInfo[2];
-                        $data = $request->getQueryParams();
-                        $request->withQueryParams($vars+$data);
+                        switch ($inject){
+                            case AbstractRouter::PARSE_PARAMS_IN_GET:{
+                                $vars = $routeInfo[2];
+                                $data = $request->getQueryParams();
+                                $request->withQueryParams($vars+$data);
+                                break;
+                            }
+                            case AbstractRouter::PARSE_PARAMS_IN_POST:{
+                                $vars = $routeInfo[2];
+                                $data = $request->getParsedBody();
+                                $request->withParsedBody($vars + $data);
+                                break;
+                            }
+                            case AbstractRouter::PARSE_PARAMS_IN_CONTEXT:{
+                                $vars = $routeInfo[2];
+                                ContextManager::getInstance()->set(AbstractRouter::PARSE_PARAMS_CONTEXT_KEY,$vars);
+                                break;
+                            }
+                            case AbstractRouter::PARSE_PARAMS_NONE:
+                            default:{
+                                break;
+                            }
+                        }
                         break;
                     }
                     case RouterDispatcher::METHOD_NOT_ALLOWED:{
