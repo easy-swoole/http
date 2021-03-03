@@ -184,6 +184,49 @@ class DispatchTest extends TestCase
         $this->assertEquals('index', $response->getBody()->__toString());
     }
 
+    public function testParseParams()
+    {
+        // get
+        $this->reset();
+        $response = new Response();
+        $this->dispatcherWithRouter->setOnRouterCreate(function (AbstractRouter $router) {
+            $router->parseParams($router::PARSE_PARAMS_IN_GET);
+        });
+        $this->dispatcherWithRouter->dispatch($this->getRequest('/user/gaobinzhan'), $response);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('{"get":{"name":"gaobinzhan"},"post":[],"context":[]}', $response->getBody()->__toString());
+
+        // post
+        $this->reset();
+        $response = new Response();
+        $this->dispatcherWithRouter->setOnRouterCreate(function (AbstractRouter $router) {
+            $router->parseParams($router::PARSE_PARAMS_IN_POST);
+        });
+        $this->dispatcherWithRouter->dispatch($this->getRequest('/user/gaobinzhan'), $response);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('{"get":[],"post":{"name":"gaobinzhan"},"context":null}', $response->getBody()->__toString());
+
+        // context
+        $this->reset();
+        $response = new Response();
+        $this->dispatcherWithRouter->setOnRouterCreate(function (AbstractRouter $router) {
+            $router->parseParams($router::PARSE_PARAMS_IN_CONTEXT);
+        });
+        $this->dispatcherWithRouter->dispatch($this->getRequest('/user/gaobinzhan'), $response);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('{"get":[],"post":[],"context":{"name":"gaobinzhan"}}', $response->getBody()->__toString());
+
+        // none
+        $this->reset();
+        $response = new Response();
+        $this->dispatcherWithRouter->setOnRouterCreate(function (AbstractRouter $router) {
+            $router->parseParams($router::PARSE_PARAMS_NONE);
+        });
+        $this->dispatcherWithRouter->dispatch($this->getRequest('/user/gaobinzhan'), $response);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('{"get":[],"post":[],"context":null}', $response->getBody()->__toString());
+    }
+
     private function reset()
     {
         $this->dispatcher = new Dispatcher('EasySwoole\Http\Tests\Controller');
