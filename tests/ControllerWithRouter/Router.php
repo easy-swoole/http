@@ -17,6 +17,8 @@ class Router extends AbstractRouter
             return false;
         });
 
+        $routeCollector->get('/user/{name}','/Index/user');
+
 //        $this->setGlobalMode(true);
     }
 }
