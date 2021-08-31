@@ -21,6 +21,7 @@ class UploadFile implements UploadedFileInterface
     private $error;
     private $clientFileName;
     private $clientMediaType;
+
     function __construct( $tempName,$size, $errorStatus, $clientFilename = null, $clientMediaType = null)
     {
         $this->tempName = $tempName;
@@ -84,5 +85,10 @@ class UploadFile implements UploadedFileInterface
     public function getClientMediaType()
     {
         return $this->clientMediaType;
+    }
+
+    public function __destruct()
+    {
+        $this->stream->close();
     }
 }
