@@ -178,6 +178,9 @@ abstract class Controller
                     $this->gc();
                 } catch (\Throwable $throwable) {
                     $this->onException($throwable);
+                } finally {
+                    unset($this->request);
+                    unset($this->response);
                 }
             }
         }
