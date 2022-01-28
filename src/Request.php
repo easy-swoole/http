@@ -26,7 +26,11 @@ class Request extends ServerRequest
             $protocol = str_replace('HTTP/', '', $request->server['server_protocol']) ;
             //为单元测试准备
             if($request->fd){
-                $body = new Stream($request->rawContent());
+                if ($request->files) {
+                    $body = new Stream('');
+                } else {
+                    $body = new Stream($request->rawContent());
+                }
             }else{
                 $body = new Stream('');
             }
