@@ -17,7 +17,7 @@ use EasySwoole\Http\Exception\RouterError;
 use EasySwoole\Http\Message\Status;
 use FastRoute\Dispatcher\GroupCountBased;
 use FastRoute\Dispatcher as RouterDispatcher;
-use Swoole\Coroutine\Channel;
+use FastRoute\RouteCollector;
 
 class Dispatcher
 {
@@ -251,7 +251,13 @@ class Dispatcher
                 throw new RouterError("class : {$class} not AbstractRouter class");
             }
         }else{
-            return null;
+            return new class extends AbstractRouter{
+
+                function initialize(RouteCollector $routeCollector)
+                {
+
+                }
+            };
         }
     }
 }
