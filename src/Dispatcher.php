@@ -26,22 +26,18 @@ class Dispatcher
      * @var AbstractRouter|null
      */
     private $routerRegister = null;
-    private $controllerPoolCreateNum = [];
     //以下为外部配置项目
     private $namespacePrefix;
     private $maxDepth;
-    private $maxPoolNum;
     private $httpExceptionHandler = null;
-    private $controllerPoolWaitTime = 5.0;
     /** @var callable */
     private $onRouterCreate;
 
-    function __construct(string $namespacePrefix = null,int $maxDepth = 5,int $maxPoolNum = 200)
+    function __construct(string $namespacePrefix = null,int $maxDepth = 5)
     {
         if($namespacePrefix !== null){
             $this->namespacePrefix = trim($namespacePrefix,'\\');
         }
-        $this->maxPoolNum = $maxPoolNum;
         $this->maxDepth = $maxDepth;
     }
 
@@ -51,17 +47,6 @@ class Dispatcher
         return $this;
     }
 
-    public function setControllerPoolWaitTime(float $controllerPoolWaitTime):Dispatcher
-    {
-        $this->controllerPoolWaitTime = $controllerPoolWaitTime;
-        return $this;
-    }
-
-    public function setControllerMaxPoolNum(int $num):Dispatcher
-    {
-        $this->maxPoolNum = $num;
-        return $this;
-    }
 
     function setOnRouterCreate(callable $call):Dispatcher
     {
@@ -185,7 +170,7 @@ class Dispatcher
 
     }
 
-    private function controllerExecutor(Request $request, Response $response, string $path)
+    protected function controllerExecutor(Request $request, Response $response, string $path)
     {
         $pathInfo = ltrim($path,"/");
         $list = explode("/",$pathInfo);
@@ -219,7 +204,7 @@ class Dispatcher
 
         if(!empty($finalClass)){
             try{
-                $controllerObject = $this->getController($finalClass);
+                $controllerObject = new $finalClass();
             }catch (\Throwable $throwable){
                 $this->onException($throwable,$request,$response);
                 return;
@@ -234,11 +219,9 @@ class Dispatcher
                     }
                 }catch (\Throwable $throwable){
                     $this->onException($throwable,$request,$response);
-                }finally {
-                    $this->recycleController($finalClass,$controllerObject);
                 }
             }else{
-                $throwable = new ControllerPoolEmpty('controller pool empty for '.$finalClass);
+                $throwable = new ControllerPoolEmpty('no controller object '.$finalClass);
                 $this->onException($throwable,$request,$response);
             }
         }else{
@@ -256,47 +239,6 @@ class Dispatcher
             $response->withStatus(Status::CODE_INTERNAL_SERVER_ERROR);
             $response->write(nl2br($throwable->getMessage()."\n".$throwable->getTraceAsString()));
         }
-    }
-
-    protected function getController(string $class)
-    {
-        $classKey = $this->generateClassKey($class);
-        if(!isset($this->$classKey)){
-            $this->$classKey = new Channel($this->maxPoolNum+1);
-            $this->controllerPoolCreateNum[$classKey] = 0;
-        }
-        $channel = $this->$classKey;
-        //懒惰创建模式
-        /** @var Channel $channel */
-        if($channel->isEmpty()){
-            $createNum = $this->controllerPoolCreateNum[$classKey];
-            if($createNum < $this->maxPoolNum){
-                $this->controllerPoolCreateNum[$classKey] = $createNum+1;
-                try{
-                    //防止用户在控制器结构函数做了什么东西导致异常
-                    return new $class();
-                }catch (\Throwable $exception){
-                    $this->controllerPoolCreateNum[$classKey] = $createNum;
-                    //直接抛给上层
-                    throw $exception;
-                }
-            }
-            return $channel->pop($this->controllerPoolWaitTime);
-        }
-        return $channel->pop($this->controllerPoolWaitTime);
-    }
-
-    private function generateClassKey(string $class):string
-    {
-        return substr(md5($class), 8, 16);
-    }
-
-    private function recycleController(string $class,Controller $obj)
-    {
-        $classKey = $this->generateClassKey($class);
-        /** @var Channel $channel */
-        $channel = $this->$classKey;
-        $channel->push($obj);
     }
 
     protected function initRouter(?string $class = null):?AbstractRouter

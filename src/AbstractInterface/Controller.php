@@ -17,7 +17,6 @@ abstract class Controller
     private $request;
     private $response;
     private $actionName;
-    private $defaultProperties = [];
     private $allowMethodReflections = [];
     private $propertyReflections = [];
 
@@ -48,10 +47,6 @@ abstract class Controller
         foreach ($properties as $property) {
             $name = $property->getName();
             $this->propertyReflections[$name] = $property;
-            //不重置静态变量与私有变量
-            if (($property->isPublic() || $property->isProtected()) && !$property->isStatic()) {
-                $this->defaultProperties[$name] = $this->{$name};
-            }
         }
     }
 
@@ -63,14 +58,6 @@ abstract class Controller
     protected function getPropertyReflections():array
     {
         return $this->propertyReflections;
-    }
-
-    protected function gc()
-    {
-        //恢复默认值
-        foreach ($this->defaultProperties as $property => $value) {
-            $this->{$property} = $value;
-        }
     }
 
     function index()
@@ -173,15 +160,6 @@ abstract class Controller
                 $this->afterAction($actionName);
             } catch (\Throwable $throwable) {
                 $this->onException($throwable);
-            } finally {
-                try {
-                    $this->gc();
-                } catch (\Throwable $throwable) {
-                    $this->onException($throwable);
-                } finally {
-                    unset($this->request);
-                    unset($this->response);
-                }
             }
         }
         return $forwardPath;
