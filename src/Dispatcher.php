@@ -25,10 +25,11 @@ class Dispatcher
     /**
      * @var AbstractRouter|null
      */
-    private $routerRegister = null;
+    private ?AbstractRouter $routerRegister = null;
     //以下为外部配置项目
-    private $namespacePrefix;
-    private $maxDepth;
+    private string $namespacePrefix;
+    private int $maxDepth;
+    /** @var null|callable */
     private $httpExceptionHandler = null;
     /** @var callable */
     private $onRouterCreate;
@@ -72,10 +73,10 @@ class Dispatcher
         if($this->router === null){
             $r = $this->initRouter( $this->namespacePrefix.'\\Router');
             if($r instanceof AbstractRouter){
+                $this->routerRegister = $r;
                 if (is_callable($this->onRouterCreate)) {
                     call_user_func($this->onRouterCreate,$r);
                 }
-                $this->routerRegister = $r;
                 $data = $r->getRouteCollector()->getData();
                 if(!empty($data)){
                     $this->router = new GroupCountBased($data);
