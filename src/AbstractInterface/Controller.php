@@ -9,6 +9,7 @@
 namespace EasySwoole\Http\AbstractInterface;
 
 use EasySwoole\Http\Message\Status;
+use EasySwoole\Http\ReflectionCache;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 
@@ -17,47 +18,14 @@ abstract class Controller
     private $request;
     private $response;
     private $actionName;
-    private $allowMethodReflections = [];
-    private $propertyReflections = [];
 
     function __construct()
     {
-        $forbidList = [
-            '__hook', '__destruct',
-            '__clone', '__construct', '__call',
-            '__callStatic', '__get', '__set',
-            '__isset', '__unset', '__sleep',
-            '__wakeup', '__toString', '__invoke',
-            '__set_state', '__clone', '__debugInfo',
-            'onRequest'
-        ];
-
-        //支持在子类控制器中以private，protected来修饰某个方法不可见
-        $ref = new \ReflectionClass(static::class);
-        $public = $ref->getMethods(\ReflectionMethod::IS_PUBLIC);
-        foreach ($public as $item) {
-            if((!in_array($item->getName(),$forbidList)) && (!$item->isStatic())){
-                $this->allowMethodReflections[$item->getName()] = $item;
-            }
+        $ref = ReflectionCache::getInstance()->getClassReflection(static::class);
+        if($ref == null){
+            $ref = new \ReflectionClass(static::class);
+            ReflectionCache::getInstance()->addReflection($ref);
         }
-
-        //获取，生成属性默认值
-        $ref = new \ReflectionClass(static::class);
-        $properties = $ref->getProperties();
-        foreach ($properties as $property) {
-            $name = $property->getName();
-            $this->propertyReflections[$name] = $property;
-        }
-    }
-
-    protected function getAllowMethodReflections()
-    {
-        return $this->allowMethodReflections;
-    }
-
-    protected function getPropertyReflections():array
-    {
-        return $this->propertyReflections;
     }
 
     function index()
@@ -137,16 +105,12 @@ abstract class Controller
         $this->request = $request;
         $this->response = $response;
         $this->actionName = $actionName;
-        return $this->__exec();
-    }
-    //允许用户修改整个请求执行流程
-    protected function __exec()
-    {
-        $actionName = $this->actionName;
         $forwardPath = null;
+        $ref = ReflectionCache::getInstance()->getClassReflection(static::class);
+        $allowMethodReflections = ReflectionCache::getInstance()->allowMethodReflections($ref);
         try {
             if ($this->onRequest($actionName) !== false) {
-                if (isset($this->allowMethodReflections[$actionName])) {
+                if (isset($allowMethodReflections[$actionName])) {
                     $forwardPath = $this->$actionName();
                 } else {
                     $forwardPath = $this->actionNotFound($actionName);
