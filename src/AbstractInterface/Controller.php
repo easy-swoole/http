@@ -100,7 +100,7 @@ abstract class Controller
     }
 
     //该方法用于保留对外调用
-    public function __hook(?string $actionName, Request $request, Response $response)
+    public function __hook(?string $actionName, Request $request, Response $response,array $actionArg = [])
     {
         $this->request = $request;
         $this->response = $response;
@@ -111,7 +111,7 @@ abstract class Controller
         try {
             if ($this->onRequest($actionName) !== false) {
                 if (isset($allowMethodReflections[$actionName])) {
-                    $forwardPath = $this->$actionName();
+                    $forwardPath = call_user_func([$this,$actionName],...$actionArg);
                 } else {
                     $forwardPath = $this->actionNotFound($actionName);
                 }
