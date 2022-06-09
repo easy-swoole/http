@@ -10,6 +10,7 @@ namespace EasySwoole\Http;
 
 
 use EasySwoole\Component\Context\ContextManager;
+use EasySwoole\Component\Context\Exception\ModifyError;
 use EasySwoole\Http\AbstractInterface\AbstractRouter;
 use EasySwoole\Http\AbstractInterface\Controller;
 use EasySwoole\Http\Exception\ControllerPoolEmpty;
@@ -21,7 +22,7 @@ use FastRoute\RouteCollector;
 
 class Dispatcher
 {
-    private $router = null;
+    private bool|null|GroupCountBased $router = null;
     /**
      * @var AbstractRouter|null
      */
@@ -67,25 +68,14 @@ class Dispatcher
         return $this;
     }
 
-    public function dispatch(Request $request,Response $response):void
+    /**
+     * @throws RouterError|ModifyError
+     */
+    public function dispatch(Request $request, Response $response):void
     {
         // 进行一次初始化判定
         if($this->router === null){
-            $r = $this->initRouter( $this->namespacePrefix.'\\Router');
-            if($r instanceof AbstractRouter){
-                $this->routerRegister = $r;
-                if (is_callable($this->onRouterCreate)) {
-                    call_user_func($this->onRouterCreate,$r);
-                }
-                $data = $r->getRouteCollector()->getData();
-                if(!empty($data)){
-                    $this->router = new GroupCountBased($data);
-                }else{
-                    $this->router = false;
-                }
-            }else{
-                $this->router = false;
-            }
+            $this->initRouter();
         }
 
         $path = UrlParser::pathInfo($request->getUri()->getPath());
@@ -242,23 +232,42 @@ class Dispatcher
         }
     }
 
-    protected function initRouter(?string $class = null):?AbstractRouter
+    protected function initRouter(bool $autoCreate = false):void
     {
+        $r = null;
+        $class = $this->namespacePrefix.'\\Router';
         if(class_exists($class)){
             $ref = new \ReflectionClass($class);
             if($ref->isSubclassOf(AbstractRouter::class)){
-                return $ref->newInstance();
+                $r = $ref->newInstance();
             }else{
                 throw new RouterError("class : {$class} not AbstractRouter class");
             }
         }else{
-            return new class extends AbstractRouter{
+            if($autoCreate){
+                $r = new class extends AbstractRouter{
+                    function initialize(RouteCollector $routeCollector)
+                    {
 
-                function initialize(RouteCollector $routeCollector)
-                {
-
-                }
-            };
+                    }
+                };
+            }
         }
+
+        if($r instanceof AbstractRouter){
+            $this->routerRegister = $r;
+            if (is_callable($this->onRouterCreate)) {
+                call_user_func($this->onRouterCreate,$r);
+            }
+            $data = $r->getRouteCollector()->getData();
+            if(!empty($data)){
+                $this->router = new GroupCountBased($data);
+            }else{
+                $this->router = false;
+            }
+        }else{
+            $this->router = false;
+        }
+
     }
 }
