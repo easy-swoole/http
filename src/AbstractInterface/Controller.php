@@ -19,8 +19,15 @@ abstract class Controller
     private $response;
     private $actionName;
 
-    function __construct()
+    function __construct(Request $request, Response $response,?string $actionName)
     {
+        $this->request = $request;
+        $this->response = $response;
+        if(empty($actionName)){
+            $actionName = "actionNotFound";
+        }
+        $this->actionName = $actionName;
+
         $ref = ReflectionCache::getInstance()->getClassReflection(static::class);
         if($ref == null){
             $ref = new \ReflectionClass(static::class);
@@ -94,11 +101,9 @@ abstract class Controller
     }
 
     //该方法用于保留对外调用
-    public function __hook(?string $actionName, Request $request, Response $response,array $actionArg = [])
+    public function __hook(array $actionArg = [])
     {
-        $this->request = $request;
-        $this->response = $response;
-        $this->actionName = $actionName;
+        $actionName = $this->actionName;
         $forwardPath = null;
         $ref = ReflectionCache::getInstance()->getClassReflection(static::class);
         $allowMethodReflections = ReflectionCache::getInstance()->allowMethodReflections($ref);

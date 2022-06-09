@@ -205,14 +205,14 @@ class Dispatcher
 
         if(!empty($finalClass)){
             try{
-                $controllerObject = new $finalClass();
+                $controllerObject = new $finalClass($request,$response,$actionName);
             }catch (\Throwable $throwable){
                 $this->onException($throwable,$request,$response);
                 return;
             }
             if($controllerObject instanceof Controller){
                 try{
-                    $forward = $controllerObject->__hook($actionName,$request,$response);
+                    $forward = $controllerObject->__hook();
                     if(is_string($forward) && (strlen($forward) > 0) && ($forward != $path)){
                         $forward = UrlParser::pathInfo($forward);
                         $request->getUri()->withPath($forward);
