@@ -28,12 +28,6 @@ abstract class Controller
         }
     }
 
-    function index()
-    {
-        $class = static::class;
-        $this->writeJson(Status::CODE_OK,null,"this is {$class} index action");
-    }
-
     protected function actionNotFound(?string $action)
     {
         $class = static::class;
