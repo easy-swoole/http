@@ -232,7 +232,7 @@ class Dispatcher
         }
     }
 
-    protected function initRouter(bool $autoCreate = false):void
+    function initRouter(bool $autoCreate = false):void
     {
         $r = null;
         $class = $this->namespacePrefix.'\\Router';
