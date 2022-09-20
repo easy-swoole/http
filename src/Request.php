@@ -91,8 +91,11 @@ class Request extends ServerRequest
         }
     }
 
-    private function initFiles()
+    private function initFiles(): array
     {
+        if(isset($this->request->ignoreFile) && $this->request->ignoreFile){
+            return [];
+        }
         if(isset($this->request->files)){
             $normalized = array();
             foreach($this->request->files as $key => $value){
@@ -118,7 +121,7 @@ class Request extends ServerRequest
             }
             return $normalized;
         }else{
-            return array();
+            return [];
         }
     }
 
