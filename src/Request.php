@@ -46,7 +46,7 @@ class Request extends ServerRequest
         }else{
             $res = [];
             foreach ($key as $item){
-                $res[$item] = isset($data[$item])? $data[$item] : null;
+                $res[$item] = $data[$item] ?? null;
             }
             if(count($key) == 1){
                 return array_shift($res);
@@ -66,14 +66,14 @@ class Request extends ServerRequest
         $uri = new Uri();
         $uri->withScheme("http");
         $uri->withPath($this->request->server['path_info']);
-        $query = isset($this->request->server['query_string']) ? $this->request->server['query_string'] : '';
+        $query = $this->request->server['query_string'] ?? '';
         $uri->withQuery($query);
         //host与port以header为准，防止经过proxy
         if(isset($this->request->header['host'])){
             $host = $this->request->header['host'];
             $host = explode(":",$host);
             $realHost = $host[0];
-            $port = isset($host[1]) ? $host[1] : null;
+            $port = $host[1] ?? null;
         }else{
             $realHost = '127.0.0.1';
             $port = $this->request->server['server_port'];
@@ -85,7 +85,7 @@ class Request extends ServerRequest
 
     private function initHeaders()
     {
-        $headers = isset($this->request->header) ? $this->request->header :[];
+        $headers = $this->request->header ?? [];
         foreach ($headers as $header => $val){
             $this->withAddedHeader($header,$val);
         }
@@ -111,7 +111,6 @@ class Request extends ServerRequest
                             $normalized[$key][] = $file;
                         }
                     }
-                    continue;
                 }else{
                     $file = $this->initFile($value);
                     if($file){
@@ -141,17 +140,17 @@ class Request extends ServerRequest
 
     private function initCookie()
     {
-        return isset($this->request->cookie) ? $this->request->cookie : [];
+        return $this->request->cookie ?? [];
     }
 
     private function initPost()
     {
-        return isset($this->request->post) ? $this->request->post : [];
+        return $this->request->post ?? [];
     }
 
     private function initGet()
     {
-        return isset($this->request->get) ? $this->request->get : [];
+        return $this->request->get ?? [];
     }
 
     final public function __toString():string
