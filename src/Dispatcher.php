@@ -35,12 +35,20 @@ class Dispatcher
     /** @var callable */
     private $onRouterCreate;
 
+    private bool $enableFakeRouter = false;
+
     function __construct(string $namespacePrefix = null,int $maxDepth = 5)
     {
         if($namespacePrefix !== null){
             $this->namespacePrefix = trim($namespacePrefix,'\\');
         }
         $this->maxDepth = $maxDepth;
+    }
+
+    function enableFakeRouter():Dispatcher
+    {
+        $this->enableFakeRouter = true;
+        return $this;
     }
 
     function setNamespacePrefix(string $space):Dispatcher
@@ -75,7 +83,7 @@ class Dispatcher
     {
         // 进行一次初始化判定
         if($this->router === null){
-            $this->initRouter();
+            $this->initRouter($this->enableFakeRouter);
         }
 
         $path = UrlParser::pathInfo($request->getUri()->getPath());
