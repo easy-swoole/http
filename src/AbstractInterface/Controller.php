@@ -101,14 +101,15 @@ abstract class Controller
     }
 
     //该方法用于保留对外调用
-    public function __hook(array $actionArg = [])
+    public function __hook(?array $actionArg = [],?array $onRequestArg = null)
     {
         $actionName = $this->actionName;
         $forwardPath = null;
         $ref = ReflectionCache::getInstance()->getClassReflection(static::class);
         $allowMethodReflections = ReflectionCache::getInstance()->allowMethodReflections($ref);
         try {
-            if ($this->onRequest($actionName) !== false) {
+            $ret = call_user_func([$this,"onRequest"],$actionName,$onRequestArg);
+            if ($ret !== false) {
                 if (isset($allowMethodReflections[$actionName])) {
                     $forwardPath = call_user_func([$this,$actionName],...$actionArg);
                 } else {
