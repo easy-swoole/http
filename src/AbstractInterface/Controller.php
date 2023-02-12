@@ -27,12 +27,6 @@ abstract class Controller
             $actionName = "actionNotFound";
         }
         $this->actionName = $actionName;
-
-        $ref = ReflectionCache::getInstance()->getClassReflection(static::class);
-        if($ref == null){
-            $ref = new \ReflectionClass(static::class);
-            ReflectionCache::getInstance()->addReflection($ref);
-        }
     }
 
     protected function actionNotFound(?string $action)

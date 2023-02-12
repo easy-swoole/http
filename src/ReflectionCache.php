@@ -21,25 +21,15 @@ class ReflectionCache
             'onRequest'
     ];
 
-    function addReflection(\ReflectionClass $reflectionClass):ReflectionCache
-    {
-        $key = md5($reflectionClass->name);
-        $this->classReflection[$key] = $reflectionClass;
-        return $this;
-    }
-
-    function getClassReflections():array
-    {
-        return $this->classReflection;
-    }
-
-    function getClassReflection(string $class):?\ReflectionClass
+    function getClassReflection(string $class):\ReflectionClass
     {
         $key = md5($class);
         if(isset( $this->classReflection[$key])){
             return $this->classReflection[$key];
         }
-        return null;
+        $ref = new \ReflectionClass($class);
+        $this->classReflection[$key] = $ref;
+        return $ref;
     }
 
     function allowMethodReflections(\ReflectionClass $reflectionClass):array
