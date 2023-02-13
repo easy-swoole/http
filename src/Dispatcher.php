@@ -181,7 +181,10 @@ class Dispatcher
         while ($maxDepth >= 0){
             $className = '';
             for ($i=0 ;$i<$maxDepth;$i++){
-                $className = $className."\\".ucfirst($list[$i] ?: 'Index');//为一级控制器Index服务
+                //处理例如  /api//user/ 等中间多了 路径分隔符的问题
+                if(!empty($list[$i])){
+                    $className = $className."\\".ucfirst($list[$i] ?: 'Index');//为一级控制器Index服务
+                }
             }
             if(class_exists($this->namespacePrefix.$className)){
                 //尝试获取该class后的actionName
