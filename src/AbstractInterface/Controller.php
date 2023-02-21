@@ -100,7 +100,7 @@ abstract class Controller
 
     protected function xml($options = LIBXML_NOERROR | LIBXML_NOCDATA, string $className = 'SimpleXMLElement')
     {
-        if($this->xml !== false){
+        if($this->xml !== null){
             return $this->xml;
         }
         if (\PHP_VERSION_ID < 80000 || \LIBXML_VERSION < 20900){
