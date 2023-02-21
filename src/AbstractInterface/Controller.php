@@ -19,6 +19,9 @@ abstract class Controller
     private $response;
     private $actionName;
 
+    private $json = null;
+    private $xml = null;
+
     function __construct(Request $request, Response $response,?string $actionName)
     {
         $this->request = $request;
@@ -81,17 +84,30 @@ abstract class Controller
         }
     }
 
-    protected function json(): ?array
+    protected function json(): array
     {
-        return json_decode($this->request()->getBody()->__toString(), true);
+        if($this->json !== null){
+            return $this->json;
+        }
+        $json = json_decode($this->request()->getBody()->__toString(), true);
+        if(is_array($json)){
+            $this->json = $json;
+        }else{
+            $this->json = [];
+        }
+        return $this->json;
     }
 
     protected function xml($options = LIBXML_NOERROR | LIBXML_NOCDATA, string $className = 'SimpleXMLElement')
     {
+        if($this->xml !== false){
+            return $this->xml;
+        }
         if (\PHP_VERSION_ID < 80000 || \LIBXML_VERSION < 20900){
             libxml_disable_entity_loader(true);
         }
-        return simplexml_load_string($this->request()->getBody()->__toString(), $className, $options);
+        $this->xml = simplexml_load_string($this->request()->getBody()->__toString(), $className, $options);
+        return $this->xml;
     }
 
     //该方法用于保留对外调用
