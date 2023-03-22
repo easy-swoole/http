@@ -9,6 +9,8 @@
 namespace EasySwoole\Http;
 
 
+use EasySwoole\Http\Message\Uri;
+
 class UrlParser
 {
     public static function pathInfo($path)
@@ -23,5 +25,14 @@ class UrlParser
             }
         }
         return $basePath;
+    }
+
+    static function appendQuery(string $url,array $args)
+    {
+        $uri = new Uri($url);
+        parse_str($uri->getQuery(),$query);
+        $query = $args + $query;
+        $uri->withQuery(http_build_query($query));
+        return $uri->__toString();
     }
 }
