@@ -50,6 +50,12 @@ class ServerRequest extends Request implements ServerRequestInterface
         return $this;
     }
 
+    function addCookieParams(array $cookies)
+    {
+        $this->cookieParams = $cookies + $this->cookieParams;
+        return $this;
+    }
+
     public function getQueryParams()
     {
         return $this->queryParams;
@@ -67,6 +73,12 @@ class ServerRequest extends Request implements ServerRequestInterface
     public function withQueryParams(array $query)
     {
         $this->queryParams = $query;
+        return $this;
+    }
+
+    function addQueryParams(array $query)
+    {
+        $this->queryParams = $query + $this->queryParams;
         return $this;
     }
 
@@ -110,6 +122,12 @@ class ServerRequest extends Request implements ServerRequestInterface
         }
     }
 
+    function addParsedBody(array $data)
+    {
+        $this->parsedBody = $data + $this->parsedBody;
+        return $this;
+    }
+
     public function withParsedBody($data)
     {
         $this->parsedBody = $data;
@@ -127,6 +145,12 @@ class ServerRequest extends Request implements ServerRequestInterface
             return $default;
         }
         return $this->attributes[$name];
+    }
+
+    function addAttributes(array $attributes)
+    {
+        $this->attributes = $attributes + $this->attributes;
+        return $this;
     }
 
     public function withAttribute($name, $value)
