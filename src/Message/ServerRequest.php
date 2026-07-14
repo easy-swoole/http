@@ -19,7 +19,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     private $queryParams = [];
     private $serverParams;
     private $uploadedFiles = [];
-    function __construct($method = 'GET', Uri $uri = null, array|null $headers = null, Stream|null $body = null, $protocolVersion = '1.1',$serverParams = [])
+    function __construct($method = 'GET', Uri|null $uri = null, array|null $headers = null, Stream|null $body = null, $protocolVersion = '1.1',$serverParams = [])
     {
         $this->serverParams = $serverParams;
         parent::__construct($method, $uri, $headers, $body, $protocolVersion);
