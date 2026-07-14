@@ -37,7 +37,7 @@ class Dispatcher
 
     private bool $enableFakeRouter = false;
 
-    function __construct(string $namespacePrefix = null,int $maxDepth = 5)
+    function __construct(string|null $namespacePrefix = null,int $maxDepth = 5)
     {
         if($namespacePrefix !== null){
             $this->namespacePrefix = trim($namespacePrefix,'\\');
@@ -164,8 +164,8 @@ class Dispatcher
             }
         }
         execController:{
-            $this->controllerExecutor($request,$response,$path);
-        }
+        $this->controllerExecutor($request,$response,$path);
+    }
 
     }
 
