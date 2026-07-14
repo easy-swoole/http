@@ -24,7 +24,7 @@ class Response extends MessageResponse
     private $isEndResponse = self::STATUS_NOT_END;//1 逻辑end  2真实end 3分离响应
     private $isChunk = false;
 
-    final public function __construct(SwooleResponse $response = null)
+    final public function __construct(SwooleResponse|null $response = null)
     {
         $this->response = $response;
         parent::__construct();

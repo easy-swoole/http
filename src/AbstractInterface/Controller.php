@@ -111,7 +111,7 @@ abstract class Controller
     }
 
     //该方法用于保留对外调用
-    public function __hook(?array $actionArg = [],?array $onRequestArg = null)
+    public function __hook(array|null $actionArg = [],array|null $onRequestArg = null)
     {
         $actionName = $this->actionName;
         $forwardPath = null;

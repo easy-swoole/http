@@ -18,7 +18,7 @@ class Message implements MessageInterface
     private $headers = [];
     private $body;
 
-    function __construct(array $headers = null,Stream $body = null,$protocolVersion = '1.1')
+    function __construct(array|null $headers = null,Stream|null $body = null,$protocolVersion = '1.1')
     {
         if($headers != null){
             $this->headers = $headers;

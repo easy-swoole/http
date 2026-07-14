@@ -98,7 +98,7 @@ abstract class AbstractRouter
         return $this;
     }
 
-    public function parseParams(?int $injectWay = null)
+    public function parseParams(int|null $injectWay = null)
     {
         if($injectWay === null){
             return $this->injectParams;

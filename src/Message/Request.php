@@ -18,7 +18,7 @@ class Request extends Message implements RequestInterface
     private $method;
     private $target;
 
-    function __construct($method = 'GET', Uri $uri = null, array $headers = null, Stream $body = null, $protocolVersion = '1.1')
+    function __construct($method = 'GET', Uri|null $uri = null, array|null $headers = null, Stream|null $body = null, $protocolVersion = '1.1')
     {
         $this->method = $method;
         if ($uri != null) {
