@@ -103,9 +103,6 @@ abstract class Controller
         if($this->xml !== null){
             return $this->xml;
         }
-        if (\PHP_VERSION_ID < 80000 || \LIBXML_VERSION < 20900){
-            libxml_disable_entity_loader(true);
-        }
         $this->xml = simplexml_load_string($this->request()->getBody()->__toString(), $className, $options);
         return $this->xml;
     }
@@ -115,12 +112,10 @@ abstract class Controller
     {
         $actionName = $this->actionName;
         $forwardPath = null;
-        $ref = ReflectionCache::getInstance()->getClassReflection(static::class);
-        $allowMethodReflections = ReflectionCache::getInstance()->allowMethodReflections($ref);
         try {
             $ret = call_user_func([$this,"onRequest"],$actionName,$onRequestArg);
             if ($ret !== false) {
-                if (isset($allowMethodReflections[$actionName])) {
+                if (ReflectionCache::getInstance()->allowMethodReflection(static::class,$actionName)) {
                     $forwardPath = call_user_func([$this,$actionName],...$actionArg);
                 } else {
                     $forwardPath = $this->actionNotFound($actionName);

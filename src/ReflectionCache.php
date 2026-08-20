@@ -32,13 +32,14 @@ class ReflectionCache
         return $ref;
     }
 
-    function allowMethodReflections(\ReflectionClass $reflectionClass):array
+    function allowMethodReflections(string $class):array
     {
-        $key = md5($reflectionClass->name);
+        $key = md5($class);
         if(isset($this->allowMethodReflections[$key])){
             return $this->allowMethodReflections[$key];
         }
         $list = [];
+        $reflectionClass = $this->getClassReflection($class);
         $public = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
         foreach ($public as $item) {
             if((!in_array($item->getName(),self::forbidMethodList)) && (!$item->isStatic())){
@@ -47,6 +48,15 @@ class ReflectionCache
         }
         $this->allowMethodReflections[$key] = $list;
         return $list;
+    }
+
+    function allowMethodReflection(string $class, string $method):?\ReflectionMethod
+    {
+        $list = $this->allowMethodReflections($class);
+        if(isset($list[$method])){
+            return $list[$method];
+        }
+        return null;
     }
 
 }
