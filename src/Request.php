@@ -83,11 +83,11 @@ class Request extends ServerRequest
         return $uri;
     }
 
-    private function initHeaders()
+    private function initHeaders(): void
     {
         $headers = $this->request->header ?? [];
         foreach ($headers as $header => $val){
-            $this->withAddedHeader($header,$val);
+            $this->withAddedHeader(strtolower($header),$val);
         }
     }
 
