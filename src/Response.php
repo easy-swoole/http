@@ -38,7 +38,7 @@ class Response extends MessageResponse
     function __response():bool
     {
         $ret = false;
-        if($this->isEndResponse <= self::STATUS_REAL_END){
+        if($this->isEndResponse < self::STATUS_REAL_END){
             $this->isEndResponse = self::STATUS_REAL_END;
             //结束处理
             $status = $this->getStatusCode();
