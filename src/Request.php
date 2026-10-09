@@ -99,22 +99,22 @@ class Request extends ServerRequest
         if(isset($this->request->files)){
             $normalized = array();
             foreach($this->request->files as $key => $value){
+                if(is_array($value) && array_key_exists('tmp_name', $value)){
+                    $file = $this->initFile($value);
+                    if($file){
+                        $normalized[$key] = $file;
+                    }
                 //如果是二维数组文件
-                if(is_array($value) && empty($value['tmp_name'])){
+                }else if(is_array($value)){
                     $normalized[$key] = [];
                     foreach($value as $file){
-                        if (empty($file['tmp_name'])){
+                        if (!is_array($file) || empty($file['tmp_name'])){
                             continue;
                         }
                         $file = $this->initFile($file);
                         if($file){
                             $normalized[$key][] = $file;
                         }
-                    }
-                }else{
-                    $file = $this->initFile($value);
-                    if($file){
-                        $normalized[$key] = $file;
                     }
                 }
             }
