@@ -48,7 +48,7 @@ class UploadFile implements UploadedFileInterface
             throw new FileException('Please provide a valid path');
         }
 
-        if ($this->size <= 0) {
+        if ($this->size < 0) {
             throw new FileException('Unable to retrieve stream');
         }
 
@@ -58,7 +58,7 @@ class UploadFile implements UploadedFileInterface
         }
 
         $movedSize = file_put_contents($targetPath,$this->stream);
-        if (!$movedSize) {
+        if ($movedSize === false) {
             throw new FileException(sprintf('Uploaded file could not be move to %s', $dir));
         }
 
