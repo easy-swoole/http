@@ -10,7 +10,6 @@ namespace EasySwoole\Http;
 
 
 use EasySwoole\Component\Context\ContextManager;
-use EasySwoole\Component\Context\Exception\ModifyError;
 use EasySwoole\Http\AbstractInterface\AbstractRouter;
 use EasySwoole\Http\AbstractInterface\Controller;
 use EasySwoole\Http\Exception\Exception;
@@ -28,7 +27,7 @@ class Dispatcher
      */
     private ?AbstractRouter $routerRegister = null;
     //以下为外部配置项目
-    private string $namespacePrefix;
+    private string $namespacePrefix = '';
     private int $maxDepth;
     /** @var null|callable */
     private $httpExceptionHandler = null;
@@ -76,9 +75,6 @@ class Dispatcher
         return $this;
     }
 
-    /**
-     * @throws RouterError|ModifyError
-     */
     public function dispatch(Request $request, Response $response):void
     {
         // 进行一次初始化判定
