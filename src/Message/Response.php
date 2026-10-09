@@ -22,17 +22,17 @@ class Response extends Message implements ResponseInterface
 
     public function withStatus($code, $reasonPhrase = '')
     {
-        if($code === $this->statusCode){
-            return $this;
-        }else{
-            $this->statusCode = $code;
-            if(empty($reasonPhrase)){
-                $this->reasonPhrase = Status::getReasonPhrase($this->statusCode);
-            }else{
-                $this->reasonPhrase = $reasonPhrase;
-            }
+        if(empty($reasonPhrase)){
+            $reasonPhrase = Status::getReasonPhrase($code);
+        }
+
+        if($code === $this->statusCode && $reasonPhrase === $this->reasonPhrase){
             return $this;
         }
+
+        $this->statusCode = $code;
+        $this->reasonPhrase = $reasonPhrase;
+        return $this;
     }
 
     public function getReasonPhrase()
