@@ -16,7 +16,7 @@ use EasySwoole\Http\Message\Uri;
 
 class Request extends ServerRequest
 {
-    private $request;
+    private \Swoole\Http\Request $request;
 
     function __construct(\Swoole\Http\Request|null $request = null)
     {
