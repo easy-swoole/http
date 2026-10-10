@@ -61,6 +61,29 @@ class UploadFileTest extends TestCase
         }
     }
 
+    public function testMoveCopiesWholeFileAfterStreamWasPartiallyRead(): void
+    {
+        $source = tempnam(sys_get_temp_dir(), 'upload-source-');
+        $target = $source . '-target';
+        file_put_contents($source, 'complete-contents');
+
+        try {
+            $upload = new UploadFile($source, 17, UPLOAD_ERR_OK);
+            $this->assertSame('complete', $upload->getStream()->read(8));
+
+            $upload->moveTo($target);
+
+            $this->assertSame('complete-contents', file_get_contents($target));
+        } finally {
+            if (is_file($source)) {
+                unlink($source);
+            }
+            if (is_file($target)) {
+                unlink($target);
+            }
+        }
+    }
+
     public function testMoveRejectsEmptyTargetPath(): void
     {
         $source = tempnam(sys_get_temp_dir(), 'upload-source-');

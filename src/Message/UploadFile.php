@@ -63,13 +63,28 @@ class UploadFile implements UploadedFileInterface
             throw new FileException(sprintf('Directory "%s" was not created', $dir));
         }
 
-        $movedSize = file_put_contents($targetPath,$this->getStream());
+        $stream = $this->getStream();
+        $stream->rewind();
+
+        $targetStream = fopen($targetPath, 'wb');
+        if ($targetStream === false) {
+            throw new FileException(sprintf('Unable to open target file %s', $targetPath));
+        }
+
+        try {
+            $movedSize = stream_copy_to_stream($stream->getStreamResource(), $targetStream);
+        } finally {
+            fclose($targetStream);
+        }
+
         if ($movedSize === false) {
-            throw new FileException(sprintf('Uploaded file could not be move to %s', $dir));
+            unlink($targetPath);
+            throw new FileException(sprintf('Uploaded file could not be move to %s', $targetPath));
         }
 
         if ($movedSize !== $this->size) {
-            throw new FileException(sprintf('File upload specified directory(%s) interrupted', $dir));
+            unlink($targetPath);
+            throw new FileException(sprintf('File upload specified path(%s) interrupted', $targetPath));
         }
     }
 
