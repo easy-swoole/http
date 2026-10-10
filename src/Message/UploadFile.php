@@ -16,7 +16,7 @@ use Psr\Http\Message\UploadedFileInterface;
 class UploadFile implements UploadedFileInterface
 {
     private $tempName;
-    private $stream;
+    private Stream|null $stream = null;
     private $size;
     private $error;
     private $clientFileName;
@@ -25,7 +25,6 @@ class UploadFile implements UploadedFileInterface
     function __construct( $tempName,$size, $errorStatus, $clientFilename = null, $clientMediaType = null)
     {
         $this->tempName = $tempName;
-        $this->stream = new Stream(fopen($tempName,"r+"));
         $this->error = $errorStatus;
         $this->size = $size;
         $this->clientFileName = $clientFilename;
@@ -37,8 +36,15 @@ class UploadFile implements UploadedFileInterface
         return $this->tempName;
     }
 
-    public function getStream()
+    public function getStream():Stream
     {
+        if ($this->stream === null) {
+            $resource = fopen($this->tempName, 'rb');
+            if ($resource === false) {
+                throw new FileException('Unable to open uploaded file stream');
+            }
+            $this->stream = new Stream($resource);
+        }
         return $this->stream;
     }
 
@@ -57,7 +63,7 @@ class UploadFile implements UploadedFileInterface
             throw new FileException(sprintf('Directory "%s" was not created', $dir));
         }
 
-        $movedSize = file_put_contents($targetPath,$this->stream);
+        $movedSize = file_put_contents($targetPath,$this->getStream());
         if ($movedSize === false) {
             throw new FileException(sprintf('Uploaded file could not be move to %s', $dir));
         }
@@ -89,6 +95,6 @@ class UploadFile implements UploadedFileInterface
 
     public function __destruct()
     {
-        $this->stream->close();
+        $this->stream?->close();
     }
 }

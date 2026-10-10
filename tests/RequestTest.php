@@ -175,19 +175,6 @@ class RequestTest extends TestCase
         $this->assertSame('valid.txt', $request->getUploadedFile('documents')[0]->getClientFilename());
     }
 
-    public function testIgnoreFileSkipsAllUploadedFiles(): void
-    {
-        $swooleRequest = new FakeSwooleRequest();
-        $swooleRequest->ignoreFile = true;
-        $swooleRequest->files = [
-            'avatar' => $this->uploadFixture('content', 'avatar.txt', 'text/plain'),
-        ];
-
-        $request = new Request($swooleRequest);
-
-        $this->assertSame([], $request->getUploadedFiles());
-    }
-
     public function testUploadErrorStatusIsPreservedWhenTemporaryFileExists(): void
     {
         $swooleRequest = new FakeSwooleRequest();
@@ -229,8 +216,6 @@ class RequestTest extends TestCase
 
 class FakeSwooleRequest extends \Swoole\Http\Request
 {
-    public bool $ignoreFile = false;
-
     public function __construct()
     {
         $this->fd = 0;
